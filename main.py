@@ -9,16 +9,7 @@ from discord.ext import commands
 from custom_exceptions import InvalidMovementException
 from grid import Grid
 
-def _get_token() -> str:
-    try:
-        token_file = open('token', 'r')
-        token = token_file.read()
-        token_file.close()
-        return token
-    except OSError:
-        return ''
-
-TOKEN = _get_token()
+TOKEN = os.environ["DISCORD_TOKEN"]
 
 GRIDS_FOLDER = 'grids/'
 
