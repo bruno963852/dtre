@@ -15,7 +15,7 @@ from play_mat.exceptions import TokenNotFoundException, InvalidMovementException
 # TOKEN = os.environ["DISCORD_TOKEN"]
 from play_mat import PlayMat
 
-TOKEN = "NzA4NDI3MjExNzk5MDAzMTY3.XrhVRw.hQ1ods100NaennooEaEIlPRE5RI"
+TOKEN = ""
 GRIDS_FOLDER = 'grids/'
 
 description = '''An example bot to showcase the discord.ext.commands extension
