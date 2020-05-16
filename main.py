@@ -2,23 +2,29 @@ import json
 import os
 import random
 import traceback
+from typing import List, Dict, Tuple
 
 import discord
+from discord import File, Member, Permissions
+from discord.abc import GuildChannel
 from discord.ext import commands
+from discord.ext.commands import CheckFailure
 
-from custom_exceptions import InvalidMovementException
-from grid import Grid
+from play_mat.exceptions import TokenNotFoundException, InvalidMovementException, FrameWithoutAlphaException
 
-TOKEN = os.environ["DISCORD_TOKEN"]
+# TOKEN = os.environ["DISCORD_TOKEN"]
+from play_mat import PlayMat
 
+TOKEN = "NzA4NDI3MjExNzk5MDAzMTY3.XrhVRw.hQ1ods100NaennooEaEIlPRE5RI"
 GRIDS_FOLDER = 'grids/'
 
 description = '''An example bot to showcase the discord.ext.commands extension
 module.
 There are a number of utility commands being showcased here.'''
-bot = commands.Bot(command_prefix=('?ttt.', '!ttt.'), description=description)
+bot = commands.Bot(command_prefix=('?drpg.', '!dprg.', '?r.', '!r.'), description=description)
 
-grids = dict()
+maps: Dict[str, PlayMat] = {}
+
 
 @bot.event
 async def on_ready():
@@ -27,180 +33,130 @@ async def on_ready():
     print(bot.user.id)
     print('------')
 
-@bot.command(aliases=['c', 'criar'])
-async def create(ctx: commands.Context, height: int, widht: int):
-    """
-    Cria um mapa com altura e largura.
-    Ex: !ttt.create 10 10
-    Cria um mapada de altura 10 e largura 10
-    ATENCÃO: Isso irá sobreescrever o mapa já existente
-    """
-    try:
-        grids[ctx.guild.id] = Grid(height, widht)
-        await ctx.send(grids[ctx.guild.id].to_string())
-    except Exception as e:
-        print(e.message)
-        await ctx.send("Deu erro nessa Shibata")
 
-@bot.command(aliases=['s', 'mostrar'])
-async def show(ctx: commands.Context):
-    try:
-        if ctx.guild.id in grids:
-            await ctx.send(grids[ctx.guild.id].to_string())
-        else:
-            await ctx.send("Ainda não há um mapa criado para esse servidor...")
-    except Exception as e:
-        traceback.print_exc()
-        await ctx.send("Deu erro nessa Shibata")
+@bot.check
+async def check_permission(ctx: commands.Context):
+    if not ctx.channel.permissions_for(ctx.me).manage_messages:
+        await ctx.send('O bot precisa da permissão de "Gerenciar Mensagens" para apagar as mensagens do canal da mesa')
+        return False
+    elif not ctx.channel.permissions_for(ctx.me).manage_channels:
+        await ctx.send('O bot precisa da permissão de "Gerenciar Canais" para criar o canal da mesa')
+        return False
+    await ctx.message.delete()
+    return True
 
-@bot.command(aliases=['ae', 'adicionarinimigo', 'adinimigo'])
-async def addenemy(ctx, name, pos_x, pos_y, size_x=1, size_y=1):
-    try:
-        if ctx.guild.id in grids:
-            grid = grids[ctx.guild.id] #type: Grid
-            if grid.has_entity(name):
-                await ctx.send("Seu retardado, já tem um aliado ou inimigo chamado {}".format(name))
-                return
-            grid.add_enemy(name, int(pos_x), int(pos_y), int(size_x), int(size_y))
-            await ctx.send(grids[ctx.guild.id].to_string())
-        else:
-            await ctx.send("Ainda não há um mapa criado para esse servidor...")
-    except Exception as e:
-        traceback.print_exc()
-        await ctx.send("Deu erro nessa shibata!!!!")
 
-@bot.command(aliases=['re', 'removerinimigo', 'reminimigo'])
-async def removeenemy(ctx, name):
-    try:
-        if ctx.guild.id in grids:
-            grid = grids[ctx.guild.id] #type: Grid
-            if not grid.has_entity(name):
-                await ctx.send("Seu retardado, não existe um aliado ou inimigo chamado {}".format(name))
-                return
-            grid.remove_enemy(name)
-            await ctx.send(grid.to_string())
-        else:
-            await ctx.send("Ainda não há um mapa criado para esse servidor...")
-    except Exception as e:
-        traceback.print_exc()
-        await ctx.send("Deu erro nessa shibata!!!!")
-
-@bot.command(aliases=['ra', 'removeraliado', 'remaliado'])
-async def removeally(ctx, name):
-    try:
-        if ctx.guild.id in grids:
-            grid = grids[ctx.guild.id] #type: Grid
-            if not grid.has_entity(name):
-                await ctx.send("Seu retardado, não existe um aliado ou inimigo chamado {}".format(name))
-                return
-            grid.remove_ally(name)
-            await ctx.send(grid.to_string())
-        else:
-            await ctx.send("Ainda não há um mapa criado para esse servidor...")
-    except Exception as e:
-        traceback.print_exc()
-        await ctx.send("Deu erro nessa shibata!!!!")
-
-@bot.command(aliases=['aa', 'adicionaraliado', 'adaliado'])
-async def addally(ctx, name, pos_x, pos_y, size_x=1, size_y=1):
-    try:
-        if ctx.guild.id in grids:
-            grid = grids[ctx.guild.id] #type: Grid
-            if grid.has_entity(name):
-                await ctx.send("Seu retardado, já tem um aliado ou inimigo chamado {}".format(name))
-                return
-            grid.add_ally(name, int(pos_x), int(pos_y), int(size_x), int(size_y))
-            await ctx.send(grid.to_string())
-        else:
-            await ctx.send("Ainda não há um mapa criado para esse servidor...")
-    except Exception as e:
-        traceback.print_exc()
-        await ctx.send("Deu erro nessa shibata!!!!")
-
-@bot.command(aliases=['mt', 'movepara'])
-async def moveto(ctx, name, pos_x, pos_y):
-    try:
-        if ctx.guild.id in grids:
-            grid = grids[ctx.guild.id] #type: Grid
-            if grid.can_move_to(name, int(pos_x), int(pos_y)):
-                grid.move_to(name, int(pos_x), int(pos_y))
-                await ctx.send(grid.to_string())
-            else:
-                await ctx.send("Movimento inválido")
-        else:
-            await ctx.send("Ainda não há um mapa criado para esse servidor...")
-
-    except Exception as e:
-        traceback.print_exc()
-        await ctx.send("Deu erro nessa shibata!!!!")
-
-@bot.command(aliases=['mb', 'movepor', 'mp'])
-async def moveby(ctx, name, movement):
-    try:
-        if ctx.guild.id in grids:
-            grid = grids[ctx.guild.id] #type: Grid
-            grid.move_by(name, movement)
-            await ctx.send(grid.to_string())
-        else:
-            await ctx.send("Ainda não há um mapa criado para esse servidor...")
-    except InvalidMovementException:
-        await ctx.send("Movimento inválido")
-    except Exception as e:
-        traceback.print_exc()
-        await ctx.send("Deu erro nessa shibata!!!!")
-
-@bot.command(aliases=['sv', 'salvar'])
-async def save(ctx):
-    try:
-        if ctx.guild.id in grids:
-            grid = grids[ctx.guild.id] #type: Grid
-            if not os.path.exists(GRIDS_FOLDER):
-                os.makedirs(GRIDS_FOLDER)
-            file = open(GRIDS_FOLDER + str(ctx.guild.id) + '.ttt', 'w')
-            json.dump(grid.to_dict(), file)
-            file.close()
-            await ctx.send("Mapa Salvo com sucesso!!!")
-        else:
-            await ctx.send("Ainda não há um mapa criado para esse servidor...")
-
-    except Exception as e:
-        traceback.print_exc()
-        await ctx.send("Deu erro nessa shibata!!!!")
-
-@bot.command(aliases=['l', 'carregar', 'cr'])
-async def load(ctx):
-    try:
-        if not os.path.exists(GRIDS_FOLDER):
-            os.makedirs(GRIDS_FOLDER)
-        file = open(GRIDS_FOLDER + str(ctx.guild.id) + '.ttt', 'r')
-        grid_dict = json.load(file)
-        file.close()
-        grids[ctx.guild.id] = Grid.from_dict(grid_dict)
-        await ctx.send("Carregando Mapa Salvo...")
-        await ctx.send(grids[ctx.guild.id].to_string())
-
-    except Exception as e:
-        traceback.print_exc()
-        await ctx.send("Deu erro nessa shibata!!!!")
-
-@bot.command(aliases=['t', 'teste'])
-async def test(ctx, mod, dc=''):
-    mod = int(mod)
-    if not dc == '':
-        dc = int(dc)
-        die = random.randint(1, 20)
-        result = ''
-        if die == 1:
-            result = "Falha Crítica! Vacilou otário!"
-        elif die == 20:
-            result = "Acerto Crítico! Mete a pêa!"
-        elif die + mod >= dc:
-            result = "Passou!"
-        else:
-            result = "NÃO Passou...."
-        await ctx.send("Dado: *{}* Mod: *{}* CD: *{}*\nTotal: *{}*\n**{}**".format(die, mod, dc, die+mod, result))
+@bot.event
+async def on_command_error(ctx: commands.Context, error: commands.CommandError):
+    print(error)
+    if error is CheckFailure:
+        await ctx.send("Erro, o bot não tem as permissões necessárias...")
     else:
-        die = random.randint(1, 20)
-        await ctx.send("Dado: *{}* Mod: *{}\nTotal: **{}**".format(die, mod, die+mod))
+        await ctx.send("Houve um erro inesperado...")
+
+
+@bot.command(aliases=['t'])
+async def test(ctx: commands.Context):
+    await ctx.send("Eu tô funcionando!")
+
+
+@bot.command(aliases=['c'])
+async def create(ctx: commands.Context, offset_x: int, offset_y: int, square_size: int, url: str = ''):
+    try:
+        if url == '':
+            attachments = ctx.message.attachments
+            if len(attachments) > 0:
+                url = attachments[0].url
+        guild_id = str(ctx.guild.id)
+        await ctx.send("Processando...")
+        playmat = PlayMat(guild_id, url, (offset_x, offset_y), square_size)
+        maps[guild_id] = playmat
+        await ctx.send(file=File(playmat.get_map(), filename='play_mat.png'))
+    except KeyError:
+        traceback.print_exc()
+    except ValueError:
+        traceback.print_exc()
+
+
+@bot.command(aliases=['at'])
+async def addtoken(ctx: commands.Context, name: str, position_x: int, position_y: int, url: str = ''):
+    try:
+        guild_id = str(ctx.guild.id)
+        if url == '':
+            attachments = ctx.message.attachments
+            if len(attachments) > 0:
+                url = attachments[0].url
+        playmat = maps[guild_id]
+        await ctx.send("Processando...")
+        playmat.add_token(name, url, (position_x, position_y))
+        await ctx.send(file=File(playmat.get_map(), filename='play_mat.png'))
+    except KeyError:
+        await ctx.send("Ainda não há um mapa criado nesse servidor...")
+        traceback.print_exc()
+    except ValueError:
+        await ctx.send("Erro na interpretação do comando...")
+        traceback.print_exc()
+
+
+@bot.command(aliases=['rt'])
+async def removetoken(ctx: commands.Context, name: str):
+    try:
+        guild_id = str(ctx.guild.id)
+        playmat = maps[guild_id]
+        await ctx.send("Processando...")
+        playmat.remove_token(name)
+        await ctx.send(file=File(playmat.get_map(), filename='play_mat.png'))
+    except TokenNotFoundException:
+        await ctx.send("Token {} não encontrado".format(name))
+    except KeyError:
+        await ctx.send("Ainda não há um mapa criado nesse servidor...")
+        traceback.print_exc()
+    except ValueError:
+        await ctx.send("Erro na interpretação do comando...")
+        traceback.print_exc()
+
+
+@bot.command(aliases=['st'])
+async def setframe(ctx: commands.Context, name: str, url: str = ''):
+    try:
+        guild_id = str(ctx.guild.id)
+        if url == '':
+            attachments = ctx.message.attachments
+            if len(attachments) > 0:
+                url = attachments[0].url
+        playmat = maps[guild_id]
+        await ctx.send("Processando...")
+        playmat.set_frame(name, url)
+        await ctx.send(file=File(playmat.get_map(), filename='play_mat.png'))
+    except KeyError:
+        await ctx.send("Ainda não há um mapa criado nesse servidor...")
+        traceback.print_exc()
+    except ValueError:
+        await ctx.send("Erro na interpretação do comando...")
+        traceback.print_exc()
+    except FrameWithoutAlphaException:
+        await ctx.send("Erro, o frame tem que ter um canal de transparência (imagem no formato png)...")
+        traceback.print_exc()
+
+
+@bot.command(aliases=['m'])
+async def move(ctx: commands.Context, name: str, movement: str):
+    try:
+        guild_id = str(ctx.guild.id)
+        playmat = maps[guild_id]
+        await ctx.send("Processando...")
+        playmat.move_token(name, movement)
+        await ctx.send(file=File(playmat.get_map(), filename='play_mat.png'))
+    except KeyError:
+        await ctx.send("Ainda não há um mapa criado nesse servidor...")
+        traceback.print_exc()
+    except TokenNotFoundException:
+        await ctx.send("Token {} não encontrado".format(name))
+    except InvalidMovementException:
+        await ctx.send("Movimento Inválido")
+    except ValueError:
+        await ctx.send("Erro na interpretação do comando...")
+        traceback.print_exc()
+
 
 bot.run(TOKEN)
