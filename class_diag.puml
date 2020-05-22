@@ -1,0 +1,219 @@
+@startuml
+
+class Exception {}
+
+namespace scenario {
+    class __init__ << (M,#FF7700) module >> {}
+    class Scenario {
+        - _characters: List[Character]
+        - _map: Playmat
+    }
+    __init__ -- Scenario : > contains
+
+    Scenario "1" o-- "1" image.Playmat
+    Scenario "1" o-- "N" char.Character
+}
+
+namespace char {
+    class __init__ << (M,#FF7700) module >> {}
+    class Character {
+        - _name: str
+        - _token: CharacterToken
+        - _defenses: List[Defense]
+        - _attacks: List[Attack]
+        - _skills: List[Skills]
+        - _resistances: List[Skill]
+    }
+    __init__ -- Character : > contains
+
+    class characteristic << (M,#FF7700) module >> {}
+    class Characteristic {
+        _name: str
+    }
+    characteristic -- Characteristic : > contains
+
+    class defense << (M,#FF7700) module >> {}
+    class Defense {
+        _value: int
+        value()
+    }
+    defense -- Defense : > contains
+
+    class attack << (M,#FF7700) module >> {}
+    class Attack {
+        _damage_die: int
+        _damage_bonus: int
+        _bonus: int
+    }
+    attack -- Attack : > contains
+
+    class skill << (M,#FF7700) module >> {}
+    class Skill {
+        _bonus: int
+    }
+    skill -- Skill : > contains
+
+    Character "1" o-- "N" Defense
+    Character "1" o-- "N" Attack
+    Character "1" o-- "N" Skill
+
+    Characteristic <|-- Defense
+    Characteristic <|-- Attack
+    Characteristic <|-- Skill
+}
+
+namespace image {
+    class image_processor << (M,#FF7700) module >> {}
+    abstract class ImageProcessor {
+        - _server_id: str
+        - _image_url: str
+        - _square_size: int
+        + {abstract} __init__(server_id: str, image_url: str, square_size: str)
+        + {abstract} get_image(): Image
+        + {abstract} get_image_bytes(): BytesIO
+        + erase_cache()
+        ..properties..
+        + <<@property>> server_id(): str
+        + <<@property>> image_url(): str
+        + <<@property>> square_size(): str
+        + <<@square_size.setter>> square_size(): str
+    }
+    image_processor -- ImageProcessor : > contains
+
+    class playmat_image_processor << (M,#FF7700) module >> {}
+    abstract class PlaymatImageProcessor {
+        - _offset_pixels: Tuple[int, int]
+        - _crop_box: Tuple[int, int, int, int]
+        - _map_size: Tuple[int, int]
+        - _grid_text_color: Tuple[int, int, int]
+        - _zoom: float
+        + __init__(server_id: str, image_url: str, offset_pixels: Tuple[int, int], square_size: int)
+        + set_offset_pixels(value: Tuple[int, int]
+        - _get_background(): Image
+        - _get_processed_background(): Image
+        - _get_image_size(): Tuple[int, int]
+        ..properties..
+        + <<@property>> offset_pixels(): Tuple[init, init]
+        + <<@property>> map_size(): Tuple[int, int]
+        + <<@property>> crop_box(): Tuple[int, int, int, int]
+        + <<@property>> grid_text_color(): Tuple[int, int, int]
+        + <<@grid_text_color.setter>> grid_text_color(value: Tuple[int, int, int])
+    }
+    playmat_image_processor -- PlayerTokenImageProcessor : > contains
+
+    class playmat << (M,#FF7700) module >> {}
+    class Playmat {
+        - _name: str
+        + __init__(name: str, server_id: str, image_url: str, offset_pixels: Tuple[int, int], square_size: int)
+        ..properties..
+        + <<@property>> name(): str
+    }
+    playmat -- Playmat : > contains
+
+    class player_token_image_processor << (M,#FF7700) module >> {}
+    abstract class PlayerTokenImageProcessor {
+        - _frame_url: str
+        - _token_size: Tuple[int, int]
+        + set_token_size(width: int, height: int)
+        - _get_background(): Image
+        - _get_frame(): Image
+        ..properties..
+        + <<property>> frame_url(): str
+    }
+    player_token_image_processor -- PlayerTokenImageProcessor : > contains
+
+    class player_token << (M,#FF7700) module >> {}
+    class PlayerToken {
+        - _position: Tuple[int, int]
+        + set_position(x: int, y: int)
+        ..properties..
+        + <<@property>> position(): Tuple[int, int]
+    }
+    player_token -- PlayerToken : > contains
+
+    class exceptions << (M,#FF7700) module >> {}
+    class TokenNotFoundException
+    class InvalidMovementException
+    class FrameWithoutAlphaException
+
+    exceptions --> TokenNotFoundException : > contains
+    exceptions --> InvalidMovementException : > contains
+    exceptions --> FrameWithoutAlphaException : > contains
+
+    Exception <|-- TokenNotFoundException
+    Exception <|-- InvalidMovementException
+    Exception <|-- FrameWithoutAlphaException
+
+    note as N1
+    This classes enhances readability
+    by separating the methods related
+    to image processing from the rest
+    end note
+
+    N1 .. PlayerTokenImageProcessor
+    N1 .. PlaymatImageProcessor
+
+    note as N2
+    Class for code reutilization of
+    some methods and polymorphism
+    end note
+
+    N2 .. ImageProcessor
+
+    ImageProcessor o-- PIL.Image : > import
+    ImageProcessor o-- io.BytesIO : > import
+    PlayerTokenImageProcessor o-- PIL.Image : > import
+    PlaymatImageProcessor o-- PIL.Image : > import
+
+    ImageProcessor <|-- PlaymatImageProcessor
+    ImageProcessor <|-- PlayerTokenImageProcessor
+    PlaymatImageProcessor <|-- Playmat
+    PlayerTokenImageProcessor <|-- PlayerToken
+
+    ' Layout Helpers
+
+    playmat_image_processor -[hidden]> player_token_image_processor
+
+    PlaymatImageProcessor -[hidden]> PlayerTokenImageProcessor
+    Playmat -[hidden]> PlayerToken
+}
+
+namespace bot {
+    class __init__ << (M,#FF7700) module >> {
+        - _bot: Bot
+        - _maps: Dict[str: Playmat]
+        + run()
+        ..events..
+        + <<@bot.event>> async on_ready()
+        + <<@bot.event>> async on_command_error(ctx: Context, error: CommandError)
+        ..checks..
+        + <<@bot.check>> async check_permission(ctx: Context)
+        ..commands..
+        + <<@bot.check>> async rualive(ctx: Context)
+        + <<@bot.check>> async _(ctx: Context)
+        + <<@bot.check>> async _(ctx: Context)
+        + <<@bot.check>> async _(ctx: Context)
+        + <<@bot.check>> async _(ctx: Context)
+        + <<@bot.check>> async _(ctx: Context)
+        + <<@bot.check>> async _(ctx: Context)
+        + <<@bot.check>> async _(ctx: Context)
+        + <<@bot.check>> async _(ctx: Context)
+        + <<@bot.check>> async _(ctx: Context)
+    }
+
+    !include commands.puml
+
+    discord.File -- __init__: < import
+    discord.Member -- __init__: < import
+    discord.Permission -- __init__: < import
+    discord.ext.commands.Bot -- __init__: < import
+    discord.ext.commands.Context -- __init__: < import
+    discord.ext.commands.CheckFailure -- __init__: < import
+    scenario.Scenario -- __init__: < import
+}
+
+' Layout Helpers
+
+PIL -[hidden]> io
+
+@enduml
