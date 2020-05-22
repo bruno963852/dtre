@@ -12,10 +12,10 @@ from discord.ext.commands import CheckFailure
 
 from play_mat.exceptions import TokenNotFoundException, InvalidMovementException, FrameWithoutAlphaException
 
-# TOKEN = os.environ["DISCORD_TOKEN"]
+TOKEN = os.environ["DISCORD_TOKEN"]
 from play_mat import PlayMat
 
-TOKEN = "NzA4NDI3MjExNzk5MDAzMTY3.XsCMUQ.mLC28t-V_f1_f05FD4zBqViTySg"
+# TOKEN = "NzA4NDI3MjExNzk5MDAzMTY3.XshJ9g.i3yTKEGn9FxkKxn1vbDvX_j7RPc"
 GRIDS_FOLDER = 'grids/'
 
 description = '''An example bot to showcase the discord.ext.commands extension

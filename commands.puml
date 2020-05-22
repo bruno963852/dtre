@@ -1,0 +1,59 @@
+@startuml
+
+note as nrualive
+    <size: 16><b>Command: rualive</b></size>
+    <b>aliases: </b> none
+    <b>parameters: </b> none
+    <b>description: </b>
+    Just a simple command to test if the bot is alive
+    <b>response:</b>
+    message: "Yes, i'm alive!"
+end note
+
+note as ncreate
+    <size: 16><b>Command: create</b></size>
+    <b>aliases: </b> c
+    <b>parameters: </b>
+    <u>name</u>: str
+    the name of the scenario
+    <i>optional</i> <u>image_url</u>: str
+    the url off the background image for the scenario
+    <i>optional</i> <u>square_size_pixels</u>: str
+    <i>optional</i> <u>offset_pixels_left</u>: str
+    <i>optional</i> <u>offset_pixels_top</u>: str
+    <b>description: </b>
+    Creates a scenario with the specified name
+    Examples:
+    ?r.c mydungeon
+    ?r.c "just a bridge" https://i.imgur.com/G5kc4QX.jpg 45 17 17
+end note
+
+note as nset_offset
+    <size: 16><b>Command: set_offset</b></size>
+    <b>aliases: </b> so, setoffset, offset
+    <b>parameters: </b>
+    <u>name</u>: str
+    <i>optional</i> <u>offset_pixels_left</u>: str
+    <i>optional</i> <u>offset_pixels_top</u>: str
+    <b>description: </b>
+    Creates a scenario with the specified name
+    Examples:
+    ?r.c mydungeon
+    ?r.c "just a bridge" https://i.imgur.com/G5kc4QX.jpg 45 17 17
+end note
+
+note as nset_text_color
+    <size: 16><b>Command: set_offset</b></size>
+    <b>aliases: </b> so, setoffset, offset
+    <b>parameters: </b>
+    <u>name</u>: str
+    <i>optional</i> <u>offset_pixels_left</u>: str
+    <i>optional</i> <u>offset_pixels_top</u>: str
+    <b>description: </b>
+    Creates a scenario with the specified name
+    Examples:
+    ?r.c mydungeon
+    ?r.c "just a bridge" https://i.imgur.com/G5kc4QX.jpg 45 17 17
+end note
+
+@enduml
