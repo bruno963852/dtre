@@ -91,42 +91,6 @@ class PlayMatImageProcessor:
         img.save(cache_image_path, quality=85, optimize=True)
         return img
 
-    def _get_frame(self, token: Token, overwrite: bool = False) -> Image:
-        frame_image_path = self.IMAGE_CACHE_DIR + self._server_id + token.name + self.FRAME_FILE_SUFFIX
-        if not overwrite and path.exists(frame_image_path):
-            return Image.open(frame_image_path)
-        if token.frame_url.startswith('http'):
-            response = requests.get(token.frame_url)
-            img = Image.open(BytesIO(response.content))
-            if img.mode != 'RGBA':
-                img = img.convert(mode='RGBA')
-            return img
-        else:
-            img = Image.open(Token.DEFAULT_TOKEN_FRAME_FILE)
-            img = img.resize((self._square_size, self._square_size), resample=Image.LANCZOS, reducing_gap=3.0)
-            img.save(frame_image_path, quality=85, optimize=True)
-            return img
-
-    def _get_token_image(self, token: Token) -> Image:
-        cache_token_path = self.IMAGE_CACHE_DIR + self._server_id + '/' + token.name + '.png'
-        if path.exists(cache_token_path) and not self._changed_frame:
-            return Image.open(cache_token_path)
-        self._changed_frame = False
-        response = requests.get(token.url)
-        source = Image.open(BytesIO(response.content))
-        source = source.convert(mode='RGBA')
-        source = source.resize((self._square_size, self._square_size), resample=Image.LANCZOS, reducing_gap=3.0)
-        background = Image.new(source.mode, (self._square_size, self._square_size), (0, 0, 0, 0))
-        mask = Image.new('L', (self._square_size, self._square_size), 0)
-        draw = ImageDraw.Draw(mask)
-        offset = math.ceil(2 * self._square_size / 45)
-        draw.ellipse((offset, offset, self._square_size - offset, self._square_size - offset), fill=255)
-        img = Image.composite(source, background, mask)
-        frame = self._get_frame(token)
-        img.alpha_composite(frame)
-        img.save(cache_token_path, quality=85, optimize=True)
-        return img
-
     def _get_image_size(self):
         img = self._get_background()
         size_x = int((img.size[0] - self._offset[0]) / self._square_size)
@@ -144,7 +108,7 @@ class PlayMatImageProcessor:
                     if tk.position == (x, y):
                         offset_x, offset_y = self._offset
                         img.alpha_composite(
-                            self._get_token_image(tk),
+                            tk.get_token_image(),
                             (offset_x + (x * self._square_size), offset_y + (y * self._square_size))
                         )
         playmat = BytesIO()

@@ -15,12 +15,13 @@ from play_mat.exceptions import TokenNotFoundException, InvalidMovementException
 # TOKEN = os.environ["DISCORD_TOKEN"]
 from play_mat import PlayMat
 
-TOKEN = ""
+TOKEN = "NzA4NDI3MjExNzk5MDAzMTY3.XsCMUQ.mLC28t-V_f1_f05FD4zBqViTySg"
 GRIDS_FOLDER = 'grids/'
 
 description = '''An example bot to showcase the discord.ext.commands extension
 module.
 There are a number of utility commands being showcased here.'''
+
 bot = commands.Bot(command_prefix=('?drpg.', '!dprg.', '?r.', '!r.'), description=description)
 
 maps: Dict[str, PlayMat] = {}

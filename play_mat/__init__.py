@@ -67,5 +67,4 @@ class PlayMat(PlayMatImageProcessor):
     def set_frame(self, name: str, url: str):
         if name not in self._tokens:
             raise TokenNotFoundException
-        self._tokens[name].frame_url = url
-        self._get_frame(self._tokens[name], True)
+        self._tokens[name].set_frame(url)
