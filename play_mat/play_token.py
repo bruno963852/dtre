@@ -1,15 +1,11 @@
 from typing import Tuple
+from play_mat.play_token_image_processor import TokenImageProcessor
 
 
-class Token:
-    DEFAULT_TOKEN_FRAME_FILE = 'play_mat/default_token_frame.png'
-
+class Token(TokenImageProcessor):
     def __init__(self, name: str, position: Tuple[int, int], url: str,
-                 frame_url: str = DEFAULT_TOKEN_FRAME_FILE):
-        self._position = position
-        self._name = name
-        self._url = url
-        self._frame_url = frame_url
+                 frame_url: str = TokenImageProcessor.DEFAULT_TOKEN_FRAME_FILE):
+        super().__init__(name, position, url, frame_url)
 
     @property
     def name(self) -> str:
