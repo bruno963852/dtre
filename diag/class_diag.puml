@@ -63,7 +63,9 @@ namespace char {
 }
 
 namespace image {
-    class image_processor << (M,#FF7700) module >> {}
+    class image_processor << (M,#FF7700) module >> {
+        + IMAGE_CACHE_DIR
+    }
     abstract class ImageProcessor {
         - _server_id: str
         - _image_url: str
@@ -75,8 +77,9 @@ namespace image {
         ..properties..
         + <<@property>> server_id(): str
         + <<@property>> image_url(): str
-        + <<@property>> square_size(): str
-        + <<@square_size.setter>> square_size(): str
+        + <<@image_url.setter>> image_url(): str
+        + <<@property>> square_size(): int
+        + <<@square_size.setter>> square_size(): int
     }
     image_processor -- ImageProcessor : > contains
 

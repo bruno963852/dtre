@@ -1,4 +1,5 @@
 import math
+from abc import ABC
 from io import BytesIO
 from typing import Tuple
 
@@ -6,14 +7,17 @@ import requests
 from PIL import Image, ImageDraw, ImageFont
 from os import path, makedirs
 
+from src.image.image_processor import IMAGE_CACHE_DIR, ImageProcessor
 
-class TokenImageProcessor:
-    IMAGE_CACHE_DIR = 'cache/'
-    DEFAULT_TOKEN_FRAME_FILE = 'play_mat/default_token_frame.png'
-    FRAME_FILE_SUFFIX = '_frame.png'
+DEFAULT_TOKEN_FRAME_FILE = 'play_mat/default_token_frame.png'
+FRAME_FILE_SUFFIX = '_frame.png'
 
-    def __init__(self, name: str, position: Tuple[int, int], url: str, square_size: int, server_id: str,
+
+class TokenImageProcessor(ImageProcessor, ABC):
+
+    def __init__(self, name: str, position: Tuple[int, int], url: str, square_size: int, server_id: str, image_url: str,
                  frame_url: str = DEFAULT_TOKEN_FRAME_FILE):
+        super().__init__(server_id, image_url, square_size)
         self._position = position
         self._name = name
         self._url = url
@@ -24,10 +28,10 @@ class TokenImageProcessor:
 
     def set_frame(self, url):
         self._get_frame(True)
-        self.get_token_image(True)
+        self._get_token_image(True)
 
     def _get_frame(self, overwrite: bool = False) -> Image:
-        frame_image_path = self.IMAGE_CACHE_DIR + self._server_id + self._name + self.FRAME_FILE_SUFFIX
+        frame_image_path = IMAGE_CACHE_DIR + self._server_id + self._name + FRAME_FILE_SUFFIX
         if not overwrite and path.exists(frame_image_path):
             return Image.open(frame_image_path)
         if self._frame_url.startswith('http'):
@@ -37,13 +41,13 @@ class TokenImageProcessor:
                 img = img.convert(mode='RGBA')
             return img
         else:
-            img = Image.open(self.DEFAULT_TOKEN_FRAME_FILE)
+            img = Image.open(DEFAULT_TOKEN_FRAME_FILE)
             img = img.resize((self._square_size, self._square_size), resample=Image.LANCZOS, reducing_gap=3.0)
             img.save(frame_image_path, quality=85, optimize=True)
             return img
 
-    def get_token_image(self, overwrite=False) -> Image:
-        cache_token_path = self.IMAGE_CACHE_DIR + self._server_id + '/' + self._name + '.png'
+    def _get_token_image(self, overwrite=False) -> Image:
+        cache_token_path = IMAGE_CACHE_DIR + self._server_id + '/' + self._name + '.png'
         if path.exists(cache_token_path) and not overwrite:
             return Image.open(cache_token_path)
         response = requests.get(self._url)
@@ -60,3 +64,6 @@ class TokenImageProcessor:
         img.alpha_composite(frame)
         img.save(cache_token_path, quality=85, optimize=True)
         return img
+
+    def get_image(self) -> Image:
+        return self._get_token_image()

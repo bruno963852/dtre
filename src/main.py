@@ -1,19 +1,15 @@
-import json
 import os
-import random
 import traceback
-from typing import List, Dict, Tuple
+from typing import Dict
 
-import discord
-from discord import File, Member, Permissions
-from discord.abc import GuildChannel
+from discord import File
 from discord.ext import commands
 from discord.ext.commands import CheckFailure
 
-from play_mat.exceptions import TokenNotFoundException, InvalidMovementException, FrameWithoutAlphaException
+from src.image.exceptions import CharacterNotFoundException, InvalidMovementException, FrameWithoutAlphaException
+from src.scenario import Scenario
 
 TOKEN = os.environ["DISCORD_TOKEN"]
-from play_mat import PlayMat
 
 GRIDS_FOLDER = 'grids/'
 
@@ -23,7 +19,7 @@ There are a number of utility commands being showcased here.'''
 
 bot = commands.Bot(command_prefix=('?drpg.', '!dprg.', '?r.', '!r.'), description=description)
 
-maps: Dict[str, PlayMat] = {}
+scenarios: Dict[str, Scenario] = {}
 
 
 @bot.event
@@ -42,17 +38,17 @@ async def check_permission(ctx: commands.Context):
     elif not ctx.channel.permissions_for(ctx.me).manage_channels:
         await ctx.send('O bot precisa da permissão de "Gerenciar Canais" para criar o canal da mesa')
         return False
-    await ctx.message.delete()
+    # await ctx.message.delete()
     return True
 
 
-@bot.event
-async def on_command_error(ctx: commands.Context, error: commands.CommandError):
-    print(error)
-    if error is CheckFailure:
-        await ctx.send("Erro, o bot não tem as permissões necessárias...")
-    else:
-        await ctx.send("Houve um erro inesperado...")
+# @bot.event
+# async def on_command_error(ctx: commands.Context, error: commands.CommandError):
+#     print(error)
+#     if error is CheckFailure:
+#         await ctx.send("Erro, o bot não tem as permissões necessárias...")
+#     else:
+#         await ctx.send("Houve um erro inesperado...")
 
 
 @bot.command(aliases=['t'])
@@ -61,7 +57,7 @@ async def test(ctx: commands.Context):
 
 
 @bot.command(aliases=['c'])
-async def create(ctx: commands.Context, offset_x: int, offset_y: int, square_size: int, url: str = ''):
+async def create(ctx: commands.Context, name: str, offset_x: int, offset_y: int, square_size: int, url: str = ''):
     try:
         if url == '':
             attachments = ctx.message.attachments
@@ -69,27 +65,28 @@ async def create(ctx: commands.Context, offset_x: int, offset_y: int, square_siz
                 url = attachments[0].url
         guild_id = str(ctx.guild.id)
         await ctx.send("Processando...")
-        playmat = PlayMat(guild_id, url, (offset_x, offset_y), square_size)
-        maps[guild_id] = playmat
-        await ctx.send(file=File(playmat.get_map(), filename='play_mat.png'))
+        scenario = Scenario(guild_id, name=name, map_url=url, offset_pixels=(offset_x, offset_y),
+                            square_size=square_size)
+        scenarios[guild_id] = scenario
+        await ctx.send(file=File(scenario.get_image(), filename='play_mat.png'))
     except KeyError:
         traceback.print_exc()
     except ValueError:
         traceback.print_exc()
 
 
-@bot.command(aliases=['at'])
-async def addtoken(ctx: commands.Context, name: str, position_x: int, position_y: int, url: str = ''):
+@bot.command(aliases=['ac', 'addcharacter', 'addchar', 'add_char'])
+async def add_character(ctx: commands.Context, name: str, position_x: int, position_y: int, url: str = ''):
     try:
         guild_id = str(ctx.guild.id)
         if url == '':
             attachments = ctx.message.attachments
             if len(attachments) > 0:
                 url = attachments[0].url
-        playmat = maps[guild_id]
+        scenario = scenarios[guild_id]
         await ctx.send("Processando...")
-        playmat.add_token(name, url, (position_x, position_y))
-        await ctx.send(file=File(playmat.get_map(), filename='play_mat.png'))
+        scenario.add_character(name, url, (position_x, position_y))
+        await ctx.send(file=File(scenario.get_image(), filename='play_mat.png'))
     except KeyError:
         await ctx.send("Ainda não há um mapa criado nesse servidor...")
         traceback.print_exc()
@@ -98,15 +95,15 @@ async def addtoken(ctx: commands.Context, name: str, position_x: int, position_y
         traceback.print_exc()
 
 
-@bot.command(aliases=['rt'])
-async def removetoken(ctx: commands.Context, name: str):
+@bot.command(aliases=['rc', 'removecharacter', 'removechar', 'remove_char'])
+async def remove_character(ctx: commands.Context, name: str):
     try:
         guild_id = str(ctx.guild.id)
-        playmat = maps[guild_id]
+        scenario = scenarios[guild_id]
         await ctx.send("Processando...")
-        playmat.remove_token(name)
-        await ctx.send(file=File(playmat.get_map(), filename='play_mat.png'))
-    except TokenNotFoundException:
+        scenario.remove_character(name)
+        await ctx.send(file=File(scenario.get_image(), filename='play_mat.png'))
+    except CharacterNotFoundException:
         await ctx.send("Token {} não encontrado".format(name))
     except KeyError:
         await ctx.send("Ainda não há um mapa criado nesse servidor...")
@@ -116,47 +113,23 @@ async def removetoken(ctx: commands.Context, name: str):
         traceback.print_exc()
 
 
-@bot.command(aliases=['st'])
-async def setframe(ctx: commands.Context, name: str, url: str = ''):
+@bot.command(aliases=['m', 'mc', 'move_char', 'movecharacter'])
+async def move_character(ctx: commands.Context, name: str, movement: str):
     try:
         guild_id = str(ctx.guild.id)
-        if url == '':
-            attachments = ctx.message.attachments
-            if len(attachments) > 0:
-                url = attachments[0].url
-        playmat = maps[guild_id]
+        scenario = scenarios[guild_id]
         await ctx.send("Processando...")
-        playmat.set_frame(name, url)
-        await ctx.send(file=File(playmat.get_map(), filename='play_mat.png'))
+        scenario.move_character(name, movement)
+        await ctx.send(file=File(scenario.get_image(), filename='play_mat.png'))
     except KeyError:
         await ctx.send("Ainda não há um mapa criado nesse servidor...")
         traceback.print_exc()
-    except ValueError:
-        await ctx.send("Erro na interpretação do comando...")
-        traceback.print_exc()
-    except FrameWithoutAlphaException:
-        await ctx.send("Erro, o frame tem que ter um canal de transparência (imagem no formato png)...")
-        traceback.print_exc()
-
-
-@bot.command(aliases=['m'])
-async def move(ctx: commands.Context, name: str, movement: str):
-    try:
-        guild_id = str(ctx.guild.id)
-        playmat = maps[guild_id]
-        await ctx.send("Processando...")
-        playmat.move_token(name, movement)
-        await ctx.send(file=File(playmat.get_map(), filename='play_mat.png'))
-    except KeyError:
-        await ctx.send("Ainda não há um mapa criado nesse servidor...")
-        traceback.print_exc()
-    except TokenNotFoundException:
+    except CharacterNotFoundException:
         await ctx.send("Token {} não encontrado".format(name))
     except InvalidMovementException:
         await ctx.send("Movimento Inválido")
     except ValueError:
         await ctx.send("Erro na interpretação do comando...")
         traceback.print_exc()
-
 
 bot.run(TOKEN)

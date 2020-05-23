@@ -1,66 +1,64 @@
-import math
 import shutil
+from abc import ABC
 from io import BytesIO
 from os import makedirs, path
-from typing import Tuple, Dict
+from typing import Tuple, Dict, Optional
 
 import requests
 from PIL import Image, ImageFont, ImageDraw
 
-from play_mat.play_token import Token
-from play_mat.exceptions import FrameWithoutAlphaException
+from src.char import Character
+from src.image.image_processor import ImageProcessor, IMAGE_CACHE_DIR
+from src.image.player_token import Token
+
+BACKGROUND_FILENAME = '/background.png'
+BACKGROUND_GRIDDED_FILENAME = '/background_gridded.png'
+
+MODE_RGBA = 'RGBA'
 
 
-class PlayMatImageProcessor:
-    IMAGE_CACHE_DIR = 'cache/'
-    BACKGROUND_FILENAME = '/background.png'
-    BACKGROUND_GRIDDED_FILENAME = '/background_gridded.png'
-    FRAME_FILE_SUFFIX = '_frame.png'
+class PlaymatImageProcessor(ImageProcessor, ABC):
 
-    def __init__(self, server_id: str, url: str, offset: Tuple[int, int], square_size: int):
-        self._server_id = server_id
-        self._url = url
-        self._offset = offset
-        self._square_size = square_size
-        self._tokens: Dict[str, Token] = {}
-        self._remove_cache()
+    def __init__(self, server_id: str, image_url: Optional[str] = None, offset_pixels: Optional[Tuple[int, int]] = None,
+                 square_size: Optional[int] = None):
+        super().__init__(server_id, image_url, square_size)
+        self._offset_pixels = offset_pixels
+        self.erase_cache()
         self._map_size = self._get_image_size()
-        self._box = (0, 0) + self._map_size
-        self._text_color = (0xff, 0xa5, 0x00, 0xff)
-        self._changed_frame = False
+        self._crop_box = (0, 0) + self._map_size
+        self._zoom = 1.0
+        self._text_color = (0xff, 0xff, 0xff, 0xff)
 
-    def _remove_cache(self):
-        cache_image_path = self.IMAGE_CACHE_DIR + self._server_id + '/'
-        if path.exists(cache_image_path):
-            shutil.rmtree(cache_image_path)
-        makedirs(cache_image_path)
+    @property
+    def size(self):
+        return self._map_size
 
     def _get_background(self, overwrite=False) -> Image:
-        cache_image_path = self.IMAGE_CACHE_DIR + self._server_id + self.BACKGROUND_FILENAME
+        cache_image_path = IMAGE_CACHE_DIR + self._server_id + BACKGROUND_FILENAME
         if not overwrite and path.exists(cache_image_path):
             return Image.open(cache_image_path)
-        response = requests.get(self._url)
+        response = requests.get(self._image_url)
         img = Image.open(BytesIO(response.content))
-        if img.mode != 'RGBA':
-            img = img.convert(mode='RGBA')
+        if img.mode != MODE_RGBA:
+            img = img.convert(mode=MODE_RGBA)
         img.save(cache_image_path, quality=85, optimize=True)
         return img
 
-    def _get_background_gridded(self) -> Image:
-        cache_image_path = self.IMAGE_CACHE_DIR + self._server_id + self.BACKGROUND_GRIDDED_FILENAME
+    def get_image(self) -> Image:
+        cache_image_path = IMAGE_CACHE_DIR + self._server_id + BACKGROUND_GRIDDED_FILENAME
         if path.exists(cache_image_path):
             return Image.open(cache_image_path)
         img = self._get_background()
 
-        if img.mode != 'RGBA':
-            img = img.convert(mode='RGBA')
+        if img.mode != MODE_RGBA:
+            img = img.convert(mode=MODE_RGBA)
 
         size_x, size_y = self._map_size
-        offset_x, offset_y = self._offset
+        offset_x, offset_y = self._offset_pixels
 
         draw = ImageDraw.Draw(img)
 
-        font = ImageFont.truetype('play_mat/FreeMono.ttf', int(self._square_size / 2))
+        font = ImageFont.truetype('image/files/FreeMonoBold.ttf', int(self._square_size / 2))
 
         for x in range(size_x):
             for y in range(size_y):
@@ -93,25 +91,26 @@ class PlayMatImageProcessor:
 
     def _get_image_size(self):
         img = self._get_background()
-        size_x = int((img.size[0] - self._offset[0]) / self._square_size)
-        size_y = int((img.size[1] - self._offset[1]) / self._square_size)
+        size_x = int((img.size[0] - self._offset_pixels[0]) / self._square_size)
+        size_y = int((img.size[1] - self._offset_pixels[1]) / self._square_size)
         return size_x, size_y
 
-    def _process(self) -> BytesIO:
-        img = self._get_background_gridded()
+    def get_map_with_tokens(self, characters: Dict[str, Character]):
+        img = self.get_image()
 
         size_x, size_y = self._map_size
 
         for x in range(size_x):
             for y in range(size_y):
-                for tk in self._tokens.values():
-                    if tk.position == (x, y):
-                        offset_x, offset_y = self._offset
+                for char in characters.values():
+                    if char.token.position == (x, y):
+                        offset_x, offset_y = self._offset_pixels
                         img.alpha_composite(
-                            tk.get_token_image(),
+                            char.token.get_image(),
                             (offset_x + (x * self._square_size), offset_y + (y * self._square_size))
                         )
-        playmat = BytesIO()
-        img.save(playmat, quality=85, optimize=True, format='PNG')
-        playmat.seek(0)
-        return playmat
+        image_bytes = BytesIO()
+        img.save(image_bytes, quality=85, optimize=True, format='PNG')
+        image_bytes.seek(0)
+        return image_bytes
+
