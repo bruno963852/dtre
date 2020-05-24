@@ -9,7 +9,7 @@ from os import path, makedirs
 
 from src.image.image_processor import IMAGE_CACHE_DIR, ImageProcessor
 
-DEFAULT_TOKEN_FRAME_FILE = 'play_mat/default_token_frame.png'
+DEFAULT_TOKEN_FRAME_FILE = 'image/files/default_token_frame.png'
 FRAME_FILE_SUFFIX = '_frame.png'
 
 

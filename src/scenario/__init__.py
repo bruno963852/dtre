@@ -12,11 +12,18 @@ _RIGHT = 'd'
 
 
 class Scenario:
-    def __init__(self, server_id: str, name: str, map_url: str, square_size: int, offset_pixels: Tuple[int, int]):
+    def __init__(self, server_id: str, name: str, map_url: str = '', square_size: int = 0, offset_pixels: Tuple[int, int] = 0):
         self._server_id = server_id
         self._name = name
         self.characters = {}
-        self.map = Playmat(server_id, map_url, offset_pixels, square_size)
+        if map_url == '':
+            self.map = Playmat(server_id)
+        else:
+            self.map = Playmat(server_id, map_url, offset_pixels, square_size)
+
+    @property
+    def name(self):
+        return self._name
 
     def remove_character(self, name: str):
         if name not in self.characters:

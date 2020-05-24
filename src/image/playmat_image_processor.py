@@ -11,6 +11,7 @@ from src.char import Character
 from src.image.image_processor import ImageProcessor, IMAGE_CACHE_DIR
 from src.image.player_token import Token
 
+DEFAULT_MAP_FILENAME = 'image/files/default_dungeon.png'
 BACKGROUND_FILENAME = '/background.png'
 BACKGROUND_GRIDDED_FILENAME = '/background_gridded.png'
 
@@ -19,8 +20,7 @@ MODE_RGBA = 'RGBA'
 
 class PlaymatImageProcessor(ImageProcessor, ABC):
 
-    def __init__(self, server_id: str, image_url: Optional[str] = None, offset_pixels: Optional[Tuple[int, int]] = None,
-                 square_size: Optional[int] = None):
+    def __init__(self, server_id: str, image_url: str, offset_pixels: Tuple[int, int], square_size: int):
         super().__init__(server_id, image_url, square_size)
         self._offset_pixels = offset_pixels
         self.erase_cache()
@@ -34,6 +34,8 @@ class PlaymatImageProcessor(ImageProcessor, ABC):
         return self._map_size
 
     def _get_background(self, overwrite=False) -> Image:
+        if self._image_url is None:
+            return Image.open(DEFAULT_MAP_FILENAME)
         cache_image_path = IMAGE_CACHE_DIR + self._server_id + BACKGROUND_FILENAME
         if not overwrite and path.exists(cache_image_path):
             return Image.open(cache_image_path)

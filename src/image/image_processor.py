@@ -10,15 +10,28 @@ IMAGE_CACHE_DIR = '../cache/'
 
 class ImageProcessor(ABC):
     def __init__(self, server_id: str, image_url: str, square_size: int):
+        """
+        Abstract class with some common fields and methods to the other imageprocessor classes
+        """
         self._server_id = server_id
         self._image_url = image_url
         self._square_size = square_size
 
     @abstractmethod
     def get_image(self) -> Image:
+        """
+        Gets the processed image
+        @rtype: Image
+        @return: the processed image
+        """
         raise NotImplementedError
 
     def get_image_bytes(self) -> BytesIO:
+        """
+        Gets the processed image in BytesIO format
+        @rtype: BytesIO
+        @return: the processed image in BytesIO format
+        """
         img = self.get_image()
         image_bytes = BytesIO()
         img.save(image_bytes, quality=85, optimize=True, format='PNG')
@@ -26,6 +39,9 @@ class ImageProcessor(ABC):
         return image_bytes
 
     def erase_cache(self):
+        """
+        Erases the cache of saved images for this server
+        """
         cache_image_path = IMAGE_CACHE_DIR + self._server_id + '/'
         if path.exists(cache_image_path):
             shutil.rmtree(cache_image_path)
