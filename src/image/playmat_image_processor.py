@@ -33,6 +33,10 @@ class PlaymatImageProcessor(ImageProcessor, ABC):
     def size(self):
         return self._map_size
 
+    @property
+    def offset(self):
+        return self._offset_pixels
+
     def _get_background(self, overwrite=False) -> Image:
         if self._image_url is None:
             return Image.open(DEFAULT_MAP_FILENAME)

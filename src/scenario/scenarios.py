@@ -8,7 +8,7 @@ class Scenarios:
     _instance = None
 
     def __init__(self):
-        self._scenarios = Dict[str, Scenario]
+        self._scenarios = {}  # type: Dict[str, Scenario]
 
     @classmethod
     def instance(cls):

@@ -5,7 +5,7 @@ from typing import Tuple
 
 import requests
 from PIL import Image, ImageDraw, ImageFont
-from os import path, makedirs
+from os import path
 
 from src.image.image_processor import IMAGE_CACHE_DIR, ImageProcessor
 
@@ -20,7 +20,7 @@ class TokenImageProcessor(ImageProcessor, ABC):
         super().__init__(server_id, image_url, square_size)
         self._position = position
         self._name = name
-        self._url = url
+        self._image_url = url
         self._server_id = server_id
         self._square_size = square_size
         self._frame_url = frame_url
@@ -31,14 +31,15 @@ class TokenImageProcessor(ImageProcessor, ABC):
         self._get_token_image(True)
 
     def _get_frame(self, overwrite: bool = False) -> Image:
-        frame_image_path = IMAGE_CACHE_DIR + self._server_id + self._name + FRAME_FILE_SUFFIX
+        frame_image_path = IMAGE_CACHE_DIR + self._server_id + '/' + self._name + FRAME_FILE_SUFFIX
         if not overwrite and path.exists(frame_image_path):
-            return Image.open(frame_image_path)
+            img = Image.open(frame_image_path)
         if self._frame_url.startswith('http'):
             response = requests.get(self._frame_url)
             img = Image.open(BytesIO(response.content))
             if img.mode != 'RGBA':
                 img = img.convert(mode='RGBA')
+            img = img.resize((self._square_size, self._square_size), resample=Image.LANCZOS, reducing_gap=3.0)
             return img
         else:
             img = Image.open(DEFAULT_TOKEN_FRAME_FILE)
@@ -50,7 +51,7 @@ class TokenImageProcessor(ImageProcessor, ABC):
         cache_token_path = IMAGE_CACHE_DIR + self._server_id + '/' + self._name + '.png'
         if path.exists(cache_token_path) and not overwrite:
             return Image.open(cache_token_path)
-        response = requests.get(self._url)
+        response = requests.get(self._image_url)
         source = Image.open(BytesIO(response.content))
         source = source.convert(mode='RGBA')
         source = source.resize((self._square_size, self._square_size), resample=Image.LANCZOS, reducing_gap=3.0)
