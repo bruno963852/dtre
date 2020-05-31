@@ -1,3 +1,4 @@
 discord.py
 Pillow
 requests
+dice_parser
