@@ -21,7 +21,7 @@ class Scenario:
         self._server_id = server_id
         self._name = name
         self.characters = {}
-        self.last_movement = []
+        self._last_movement = []
         if map_url == '':
             self.map = Playmat(server_id)
         else:
@@ -71,11 +71,11 @@ class Scenario:
         self.characters[name] = Character(name, token)
 
     def move_character(self, name: str, movement: str):
-        self.last_movement = []
         moves = movement.split()
         if name not in self.characters:
             raise CharacterNotFoundException
         char = self.characters[name]
+        self._last_movement = [char.token.position]
         previous_position = char.token.position
         try:
             for move in moves:
@@ -106,11 +106,15 @@ class Scenario:
                 token.increment_position(x=1)
             else:
                 raise InvalidMovementException
-        self.last_movement.append(token.position)
+        self._last_movement.append(token.position)
 
-    def get_image(self):
-        return self.map.get_map_with_tokens(self.characters)
+    def get_image(self, show_movement=False):
+        movement = None
+        if show_movement:
+            movement = self._last_movement
+        return self.map.get_full_map(self.characters, movement)
 
+    
     # def set_frame(self, name: str, url: str):
     #     if name not in self._tokens:
     #         raise CharacterNotFoundException

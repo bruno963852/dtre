@@ -2,10 +2,10 @@ import shutil
 from abc import ABC
 from io import BytesIO
 from os import makedirs, path
-from typing import Tuple, Dict, Optional
+from typing import Tuple, Dict, Optional, List
 
 import requests
-from PIL import Image, ImageFont, ImageDraw
+from PIL import Image, ImageFont, ImageDraw, ImageColor
 
 from src.char import Character
 from src.image.image_processor import ImageProcessor, IMAGE_CACHE_DIR
@@ -101,19 +101,32 @@ class PlaymatImageProcessor(ImageProcessor, ABC):
         size_y = int((img.size[1] - self._offset_pixels[1]) / self._square_size)
         return size_x, size_y
 
-    def get_map_with_tokens(self, characters: Dict[str, Character]):
+    def get_full_map(self, characters: Dict[str, Character], movement: List[Tuple[int, int]] = None):
         img = self.get_image()
 
         size_x, size_y = self._map_size
 
         for x in range(size_x):
             for y in range(size_y):
+                offset_x, offset_y = self._offset_pixels
+                pos_x, pos_y = offset_x + (x * self._square_size), offset_y + (y * self._square_size)
+                if movement is not None:
+                    for mov in movement:
+                        if mov == (x, y):
+                            draw = ImageDraw.Draw(img)
+                            size = self._square_size / 4
+                            draw.ellipse(
+                                (
+                                    (pos_x + size, pos_y + size),
+                                    (pos_x + self._square_size - size, pos_y + self._square_size - size)
+                                ),
+                                fill=ImageColor.getrgb('cyan')
+                            )
                 for char in characters.values():
                     if char.token.position == (x, y):
-                        offset_x, offset_y = self._offset_pixels
                         img.alpha_composite(
                             char.token.get_image(),
-                            (offset_x + (x * self._square_size), offset_y + (y * self._square_size))
+                            (pos_x, pos_y)
                         )
         image_bytes = BytesIO()
         img.save(image_bytes, quality=85, optimize=True, format='PNG')

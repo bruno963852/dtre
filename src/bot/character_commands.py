@@ -118,7 +118,7 @@ class CharacterCommands(Cog):
             scenario = Scenarios.get_scenario(guild_id)
             await ctx.send("Processando...")
             scenario.move_character(name, movement)
-            await ctx.send(file=File(scenario.get_image(), filename='play_mat.png'))
+            await ctx.send(file=File(scenario.get_image(True), filename='play_mat.png'))
         except KeyError:
             await ctx.send("Ainda não há um mapa criado nesse servidor...")
             traceback.print_exc()
