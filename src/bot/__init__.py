@@ -43,9 +43,9 @@ async def check_permission(ctx: commands.Context):
     if not ctx.channel.permissions_for(ctx.me).manage_messages:
         await ctx.send('O bot precisa da permissão de "Gerenciar Mensagens" para apagar as mensagens do canal da mesa')
         return False
-    elif not ctx.channel.permissions_for(ctx.me).manage_channels:
-        await ctx.send('O bot precisa da permissão de "Gerenciar Canais" para criar o canal da mesa')
-        return False
+    # elif not ctx.channel.permissions_for(ctx.me).manage_channels:
+    #     await ctx.send('O bot precisa da permissão de "Gerenciar Canais" para criar o canal da mesa')
+    #     return False
     # await ctx.message.delete()
     return True
 

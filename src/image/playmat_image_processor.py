@@ -68,7 +68,7 @@ class PlaymatImageProcessor(ImageProcessor, ABC):
 
         for x in range(size_x):
             for y in range(size_y):
-                top_left_corner = (offset_x + (x * self._square_size), offset_x + (y * self._square_size))
+                top_left_corner = (offset_x + (x * self._square_size), offset_y + (y * self._square_size))
                 bottom_right_corner = (top_left_corner[0] + self._square_size, top_left_corner[1] + self._square_size)
                 if y == 0:
                     draw.text(
@@ -105,11 +105,12 @@ class PlaymatImageProcessor(ImageProcessor, ABC):
         img = self.get_image()
 
         size_x, size_y = self._map_size
+        offset_x, offset_y = self._offset_pixels
 
         for x in range(size_x):
             for y in range(size_y):
-                offset_x, offset_y = self._offset_pixels
-                pos_x, pos_y = offset_x + (x * self._square_size), offset_y + (y * self._square_size)
+                pos_x = offset_x + (x * self._square_size)
+                pos_y = offset_y + (y * self._square_size)
                 if movement is not None:
                     for mov in movement:
                         if mov == (x, y):
