@@ -44,11 +44,12 @@ class CharacterCommands(Cog):
         """
         try:
             guild_id = str(ctx.guild.id)
+            channel_id = str(ctx.channel.id)
             if url == '':
                 attachments = ctx.message.attachments
                 if len(attachments) > 0:
                     url = attachments[0].url
-            scenario = Scenarios.get_scenario(guild_id)
+            scenario = Scenarios.get_scenario(guild_id, channel_id)
             await ctx.send("Processando...")
             scenario.add_character(name, url, (position_x, position_y))
             await ctx.send(file=File(scenario.get_image(), filename='play_mat.png'))
@@ -78,7 +79,8 @@ class CharacterCommands(Cog):
         """
         try:
             guild_id = str(ctx.guild.id)
-            scenario = Scenarios.get_scenario(guild_id)
+            channel_id = str(ctx.channel.id)
+            scenario = Scenarios.get_scenario(guild_id, channel_id)
             await ctx.send("Processando...")
             scenario.remove_character(name)
             await ctx.send(file=File(scenario.get_image(), filename='play_mat.png'))
@@ -115,12 +117,13 @@ class CharacterCommands(Cog):
         """
         try:
             guild_id = str(ctx.guild.id)
-            scenario = Scenarios.get_scenario(guild_id)
+            channel_id = str(ctx.channel.id)
+            scenario = Scenarios.get_scenario(guild_id, channel_id)
             await ctx.send("Processando...")
             scenario.move_character(name, movement)
             await ctx.send(file=File(scenario.get_image(True), filename='play_mat.png'))
         except KeyError:
-            await ctx.send("Ainda não há um mapa criado nesse servidor...")
+            await ctx.send("Ainda não há um mapa criado nesse canal...")
             traceback.print_exc()
         except CharacterNotFoundException:
             await ctx.send("Token {} não encontrado".format(name))

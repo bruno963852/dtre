@@ -17,11 +17,13 @@ class Scenarios:
         return cls._instance
 
     @classmethod
-    def get_scenario(cls, guild_id: str) -> Scenario:
-        if guild_id not in cls.instance()._scenarios:
+    def get_scenario(cls, guild_id: str, channel_id: str) -> Scenario:
+        key = f'{guild_id}/{channel_id}'
+        if key not in cls.instance()._scenarios:
             raise KeyError("There's no scenario on this Guild")
-        return cls.instance()._scenarios[guild_id]
+        return cls.instance()._scenarios[key]
 
     @classmethod
-    def put_scenario(cls, guild_id: str, scenario: Scenario):
-        cls.instance()._scenarios[guild_id] = scenario
+    def put_scenario(cls, guild_id: str, channel_id: str, scenario: Scenario):
+        key = f'{guild_id}/{channel_id}'
+        cls.instance()._scenarios[key] = scenario

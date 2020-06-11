@@ -9,13 +9,18 @@ IMAGE_CACHE_DIR = '../cache/'
 
 
 class ImageProcessor(ABC):
-    def __init__(self, server_id: str, image_url: str, square_size: int):
+    def __init__(self, server_id: str, channel_id: str, image_url: str, square_size: int):
         """
         Abstract class with some common fields and methods to the other imageprocessor classes
         """
         self._server_id = server_id
         self._image_url = image_url
         self._square_size = square_size
+        self._channel_id = channel_id
+
+    @property
+    def _files_dir(self):
+        return f'{IMAGE_CACHE_DIR}{self._server_id}/{self._channel_id}/'
 
     @abstractmethod
     def get_image(self) -> Image:
@@ -42,7 +47,7 @@ class ImageProcessor(ABC):
         """
         Erases the cache of saved images for this server
         """
-        cache_image_path = IMAGE_CACHE_DIR + self._server_id + '/'
+        cache_image_path = self._files_dir
         if path.exists(cache_image_path):
             shutil.rmtree(cache_image_path)
         makedirs(cache_image_path)

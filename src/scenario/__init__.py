@@ -1,4 +1,4 @@
-from typing import Dict, Tuple
+from typing import Tuple
 
 from src.char import Character
 from src.image.exceptions import CharacterNotFoundException, InvalidMovementException
@@ -16,16 +16,18 @@ _ATTR_CHARACTERS = 'characters'
 
 
 class Scenario:
-    def __init__(self, server_id: str, name: str, map_url: str = '', square_size: int = 0,
+    def __init__(self, server_id: str, channel_id: str, name: str, map_url: str = '', square_size: int = 0,
                  offset_pixels: Tuple[int, int] = (0, 0)):
         self._server_id = server_id
+        self._channel_id = channel_id
         self._name = name
         self.characters = {}
         self._last_movement = []
         if map_url == '':
-            self.map = Playmat(server_id)
+            self.map = Playmat(server_id, channel_id)
         else:
-            self.map = Playmat(server_id, map_url, offset_pixels, square_size)
+            self.map = Playmat(server_id=server_id, channel_id=channel_id, image_url=map_url,
+                               offset_pixels=offset_pixels, square_size=square_size)
 
     @property
     def name(self):
@@ -43,13 +45,15 @@ class Scenario:
         }
 
     @staticmethod
-    def from_dict(dict_: dict, server_id: str):
+    def from_dict(dict_: dict, server_id: str, channel_id: str):
         map_ = Playmat.from_dict(
             dict_[_ATTR_MAP],
-            server_id
+            server_id,
+            channel_id
         )
         scenario = Scenario(
             server_id=server_id,
+            channel_id=channel_id,
             name=dict_[_ATTR_NAME],
             map_url=map_.image_url,
             square_size=map_.square_size,
@@ -57,7 +61,7 @@ class Scenario:
         )
         chars = dict_[_ATTR_CHARACTERS]
         for char_dict in chars:
-            char = Character.from_dict(char_dict, server_id, map_.square_size)
+            char = Character.from_dict(char_dict, server_id, channel_id, map_.square_size)
             scenario.add_character(char.name, char.token.image_url, char.token.position)
         return scenario
 
@@ -67,7 +71,7 @@ class Scenario:
         del self.characters[name]
 
     def add_character(self, name: str, url: str, position: Tuple[int, int] = (0, 0)):
-        token = Token(name, position, url, self.map.square_size, self._server_id)
+        token = Token(name, position, url, self.map.square_size, self._server_id, self._channel_id)
         self.characters[name] = Character(name, token)
 
     def move_character(self, name: str, movement: str):
@@ -114,7 +118,6 @@ class Scenario:
             movement = self._last_movement
         return self.map.get_full_map(self.characters, movement)
 
-    
     # def set_frame(self, name: str, url: str):
     #     if name not in self._tokens:
     #         raise CharacterNotFoundException

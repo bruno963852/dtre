@@ -8,8 +8,8 @@ ATTR_FRAME_URL = 'frame_url'
 
 class Token(TokenImageProcessor):
     def __init__(self, name: str, position: Tuple[int, int], image_url: str, square_size: int, server_id: str,
-                 frame_url: str = DEFAULT_TOKEN_FRAME_FILE):
-        super().__init__(name, position, image_url, square_size, server_id, frame_url)
+                 channel_id: str, frame_url: str = DEFAULT_TOKEN_FRAME_FILE):
+        super().__init__(name, position, image_url, square_size, server_id, channel_id, frame_url)
 
     @property
     def name(self) -> str:
@@ -41,16 +41,17 @@ class Token(TokenImageProcessor):
             ATTR_POSITION: self.position,
             ATTR_IMAGE_URL: self._image_url,
             ATTR_FRAME_URL: self._frame_url
-         }
+        }
 
     def increment_position(self, x: int = 0, y: int = 0):
         self._position = (self._position[0] + x, self.position[1] + y)
 
     @staticmethod
-    def from_dict(dict_: dict, name: str, square_size: int, server_id: str):
+    def from_dict(dict_: dict, name: str, square_size: int, server_id: str, channel_id: str):
         return Token(
             name=name,
             server_id=server_id,
+            channel_id=channel_id,
             square_size=square_size,
             position=tuple(dict_[ATTR_POSITION]),
             image_url=dict_[ATTR_IMAGE_URL],
