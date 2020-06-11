@@ -47,10 +47,11 @@ class ScenarioCommands(Cog):
         try:
             url = get_attachment(ctx, url)
             guild_id = str(ctx.guild.id)
+            channel_id = str(ctx.channel.id)
             await ctx.send("Processando...")
-            scenario = Scenario(guild_id, name=name, map_url=url, offset_pixels=(offset_x, offset_y),
+            scenario = Scenario(guild_id, channel_id, name=name, map_url=url, offset_pixels=(offset_x, offset_y),
                                 square_size=square_size)
-            Scenarios.put_scenario(guild_id, scenario)
+            Scenarios.put_scenario(guild_id, channel_id,  scenario)
             await ctx.send(file=File(scenario.get_image(), filename='play_mat.png'))
         except KeyError:
             traceback.print_exc()
@@ -73,8 +74,9 @@ class ScenarioCommands(Cog):
         """
         try:
             guild_id = str(ctx.guild.id)
+            channel_id = str(ctx.channel.id)
             await ctx.send("Processando...")
-            d = Scenarios.get_scenario(guild_id).dict
+            d = Scenarios.get_scenario(guild_id, channel_id).dict
             message = "```{}```".format(json.dumps(d))
             await ctx.send(message)
         except KeyError:
@@ -105,10 +107,11 @@ class ScenarioCommands(Cog):
         """
         try:
             guild_id = str(ctx.guild.id)
+            channel_id = str(ctx.channel.id)
             await ctx.send("Processando...")
             dict_ = json.loads(json_str)
-            scenario = Scenario.from_dict(dict_, guild_id)
-            Scenarios.put_scenario(guild_id, scenario)
+            scenario = Scenario.from_dict(dict_, guild_id, channel_id)
+            Scenarios.put_scenario(guild_id, channel_id, scenario)
             await ctx.send(file=File(scenario.get_image(), filename='play_mat.png'))
         except KeyError:
             traceback.print_exc()

@@ -9,9 +9,10 @@ _ATTR_SQUARE_SIZE = 'square_size'
 
 
 class Playmat(PlaymatImageProcessor):
-    def __init__(self, server_id: str, image_url: Optional[str] = None, offset_pixels: Tuple[int, int] = (0, 0),
+    def __init__(self, server_id: str, channel_id: str, image_url: Optional[str] = None,
+                 offset_pixels: Tuple[int, int] = (0, 0),
                  square_size: int = 64):
-        super().__init__(server_id, image_url, offset_pixels, square_size)
+        super().__init__(server_id, channel_id, image_url, offset_pixels, square_size)
 
     @property
     def dict(self) -> dict:
@@ -22,9 +23,10 @@ class Playmat(PlaymatImageProcessor):
         }
 
     @staticmethod
-    def from_dict(dict_: dict, server_id: str):
+    def from_dict(dict_: dict, server_id: str, channel_id: str):
         return Playmat(
             server_id=server_id,
+            channel_id=channel_id,
             image_url=dict_[_ATTR_IMAGE_URL],
             offset_pixels=tuple(dict_[_ATTR_OFFSET]),
             square_size=dict_[_ATTR_SQUARE_SIZE]

@@ -28,13 +28,14 @@ class Character:
         }
 
     @staticmethod
-    def from_dict(dict_: dict, server_id: str, square_size: int):
+    def from_dict(dict_: dict, server_id: str, channel_id: str, square_size: int):
         return Character(
             name=dict_[ATTR_NAME],
             token=Token.from_dict(
                 dict_=dict_[ATTR_TOKEN],
                 name=dict_[ATTR_NAME],
                 server_id=server_id,
+                channel_id=channel_id,
                 square_size=square_size
             )
         )

@@ -15,12 +15,12 @@ FRAME_FILE_SUFFIX = '_frame.png'
 
 class TokenImageProcessor(ImageProcessor, ABC):
 
-    def __init__(self, name: str, position: Tuple[int, int], url: str, square_size: int, server_id: str, image_url: str,
-                 frame_url: str = DEFAULT_TOKEN_FRAME_FILE):
-        super().__init__(server_id, image_url, square_size)
+    def __init__(self, name: str, position: Tuple[int, int], image_url: str, square_size: int, server_id: str,
+                 channel_id: str, frame_url: str = DEFAULT_TOKEN_FRAME_FILE):
+        super().__init__(server_id, channel_id, image_url, square_size)
         self._position = position
         self._name = name
-        self._image_url = url
+        self._image_url = image_url
         self._server_id = server_id
         self._square_size = square_size
         self._frame_url = frame_url
@@ -31,7 +31,7 @@ class TokenImageProcessor(ImageProcessor, ABC):
         self._get_token_image(True)
 
     def _get_frame(self, overwrite: bool = False) -> Image:
-        frame_image_path = IMAGE_CACHE_DIR + self._server_id + '/' + self._name + FRAME_FILE_SUFFIX
+        frame_image_path = self._files_dir + self._name + FRAME_FILE_SUFFIX
         if not overwrite and path.exists(frame_image_path):
             img = Image.open(frame_image_path)
         if self._frame_url.startswith('http'):
@@ -48,7 +48,7 @@ class TokenImageProcessor(ImageProcessor, ABC):
             return img
 
     def _get_token_image(self, overwrite=False) -> Image:
-        cache_token_path = IMAGE_CACHE_DIR + self._server_id + '/' + self._name + '.png'
+        cache_token_path = self._files_dir + self._name + '.png'
         if path.exists(cache_token_path) and not overwrite:
             return Image.open(cache_token_path)
         response = requests.get(self._image_url)
