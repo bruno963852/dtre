@@ -74,7 +74,7 @@ class PlaymatImageProcessor(ImageProcessor, ABC):
                     draw.text(
                         (
                             top_left_corner[0] + int(self._square_size / 4),
-                            offset_x + int(self._square_size / 4)
+                            offset_y + int(self._square_size / 4)
                         ),
                         str(x),
                         fill=self._text_color,
