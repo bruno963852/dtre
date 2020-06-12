@@ -115,7 +115,7 @@ class PlaymatImageProcessor(ImageProcessor, ABC):
                     for mov in movement:
                         if mov == (x, y):
                             draw = ImageDraw.Draw(img)
-                            size = self._square_size / 4
+                            size = self._square_size / 3
                             draw.ellipse(
                                 (
                                     (pos_x + size, pos_y + size),
