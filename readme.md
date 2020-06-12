@@ -18,14 +18,18 @@ The bot responds to user commands on text channels. You can:
 * Create a Scenario
 * Add Tokens on the Scenario
 * Move Tokens
- 
+
+### Scenario
+A Scenario is basically a game map. The bot creates one independent scenario for each text channel that invokes the command. On the same text channel, every time a new scenario is created (or loaded), the old one is overwritten.
+
+### Commands
 To invoke a bot command, just use one of the prefixes bellow:
 * !dtre.
 * ?dtre.
 * !r.
 * ?r.
 
-See the Wiki for a List of Commands
+See the [Wiki](https://github.com/bruno963852/dtre/wiki/Commands-%5BENG%5D) for a List of Commands
 
 Examples:
 
