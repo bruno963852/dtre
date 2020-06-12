@@ -24,3 +24,11 @@ To invoke a bot command, just use one of the prefixes bellow:
 * ?dtre.
 * !r.
 * ?r.
+
+See the Wiki for a List of Commands
+
+Examples:
+
+![create_example](img/screenshot_dtre_1.png)
+![create_example](img/screenshot_dtre_2.png)
+![create_example](img/screenshot_dtre_3.png)
