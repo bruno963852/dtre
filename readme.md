@@ -4,6 +4,7 @@ DTRE is a tabletop rpg engine to be used in discord. If you're tired of complica
 
 ![battle grid example](img/readme_default_dungeon.png)
 
+## Support
 If you like this bot and want to support this work, buy me a coffee!<br>
 [![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Q5Q21RF2J)
 
