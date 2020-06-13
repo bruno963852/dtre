@@ -9,7 +9,7 @@ If you like this bot and want to support this work, buy me a coffee!<br>
 [![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Q5Q21RF2J)
 
 ## How to Add to you Server
-Just click [HERE!](https://discord.com/oauth2/authorize?client_id=720085008710369370&permissions=10240&scope=bot)!
+Just click [HERE!](https://discord.com/api/oauth2/authorize?client_id=708427211799003167&permissions=10240&scope=bot)!
 
 ## Usage
 The bot responds to user commands on text channels. You can:

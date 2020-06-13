@@ -4,18 +4,20 @@ import sys
 import traceback
 from typing import Dict
 
-from discord import File
+from discord import File, User
 from discord.ext import commands
 from discord.ext.commands import CheckFailure, Context
 
 from src.bot.character_commands import CharacterCommands
 from src.bot.dice_roll_commands import DiceRollCommands
+from src.bot.discord_logging_handler import DiscordLoggingHandler
 from src.bot.misc_commands import MiscCommands
 from src.bot.scenario_commands import ScenarioCommands
 from src.image.exceptions import CharacterNotFoundException, InvalidMovementException, FrameWithoutAlphaException
 from src.scenario import Scenario
 
 TOKEN = os.environ["DISCORD_TOKEN"]
+USER_ID = int(os.environ["USER_ID"])
 
 DESCRIPTION = '''DTRE is a tabletop rpg engine to be used in discord. If you're tired of complicated tools, 
 but want some more functionality and want a simple streamlined roleplaying experience directly on discord, 
@@ -34,19 +36,19 @@ async def on_ready():
     bot.add_cog(ScenarioCommands(bot))
     bot.add_cog(CharacterCommands(bot))
     bot.add_cog(DiceRollCommands(bot))
+
+    # noinspection PyArgumentList
+    logging.basicConfig(
+        level=logging.INFO,
+        format="-------------------------------\n*%(asctime)s* **[%(levelname)s]** \n**Message:** %(message)s",
+        handlers=[
+            logging.FileHandler('../debug.log'),
+            logging.StreamHandler(sys.stdout),
+            DiscordLoggingHandler(bot)
+        ]
+    )
+
     logging.info(f'Logged in as "{bot.user.name}" / {bot.user.id}')
-
-
-# @bot.check
-# async def check_permission(ctx: commands.Context):
-#     if not ctx.channel.permissions_for(ctx.me).manage_messages:
-#         await ctx.send('O bot precisa da permissão de "Gerenciar Mensagens" para apagar as mensagens do canal da mesa')
-#         return False
-#     # elif not ctx.channel.permissions_for(ctx.me).manage_channels:
-#     #     await ctx.send('O bot precisa da permissão de "Gerenciar Canais" para criar o canal da mesa')
-#     #     return False
-#     # await ctx.message.delete()
-#     return True
 
 
 @bot.event
@@ -65,7 +67,7 @@ async def on_command_error(ctx, error):
         pass
     
     elif isinstance(error, commands.UserInputError):
-        return await ctx.send(f'There was an **error** in the command arguments...')
+        await ctx.send(f'There was an **error** in the command arguments...')
 
     elif isinstance(error, commands.DisabledCommand):
         return await ctx.send(f'{ctx.command} has been disabled...')
