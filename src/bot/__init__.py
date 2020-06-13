@@ -17,7 +17,6 @@ from src.image.exceptions import CharacterNotFoundException, InvalidMovementExce
 from src.scenario import Scenario
 
 TOKEN = os.environ["DISCORD_TOKEN"]
-USER_ID = int(os.environ["USER_ID"])
 
 DESCRIPTION = '''DTRE is a tabletop rpg engine to be used in discord. If you're tired of complicated tools, 
 but want some more functionality and want a simple streamlined roleplaying experience directly on discord, 
