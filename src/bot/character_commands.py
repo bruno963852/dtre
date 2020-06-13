@@ -42,23 +42,16 @@ class CharacterCommands(Cog):
         @param size_y: the size in map squares of the token in the y axis (not supported yet, omit this parameter)
         @return: None
         """
-        try:
-            guild_id = str(ctx.guild.id)
-            channel_id = str(ctx.channel.id)
-            if url == '':
-                attachments = ctx.message.attachments
-                if len(attachments) > 0:
-                    url = attachments[0].url
-            scenario = Scenarios.get_scenario(guild_id, channel_id)
-            await ctx.send("Processando...")
-            scenario.add_character(name, url, (position_x, position_y))
-            await ctx.send(file=File(scenario.get_image(), filename='play_mat.png'))
-        except KeyError:
-            await ctx.send("There's no scenario on this server yet...")
-            traceback.print_exc()
-        except ValueError:
-            await ctx.send("Erro na interpretação do comando...")
-            traceback.print_exc()
+        guild_id = str(ctx.guild.id)
+        channel_id = str(ctx.channel.id)
+        if url == '':
+            attachments = ctx.message.attachments
+            if len(attachments) > 0:
+                url = attachments[0].url
+        scenario = Scenarios.get_scenario(guild_id, channel_id)
+        await ctx.send("Processando...")
+        scenario.add_character(name, url, (position_x, position_y))
+        await ctx.send(file=File(scenario.get_image(), filename='play_mat.png'))
 
     @command(aliases=['rc', 'removecharacter', 'removechar', 'remove_char'],
              help="""Removes a character from the scenario
@@ -77,21 +70,12 @@ class CharacterCommands(Cog):
         @param ctx: Context passed by the API
         @param name: the name of the character to be removed
         """
-        try:
-            guild_id = str(ctx.guild.id)
-            channel_id = str(ctx.channel.id)
-            scenario = Scenarios.get_scenario(guild_id, channel_id)
-            await ctx.send("Processando...")
-            scenario.remove_character(name)
-            await ctx.send(file=File(scenario.get_image(), filename='play_mat.png'))
-        except CharacterNotFoundException:
-            await ctx.send("Token {} não encontrado".format(name))
-        except KeyError:
-            await ctx.send("Ainda não há um mapa criado nesse servidor...")
-            traceback.print_exc()
-        except ValueError:
-            await ctx.send("Erro na interpretação do comando...")
-            traceback.print_exc()
+        guild_id = str(ctx.guild.id)
+        channel_id = str(ctx.channel.id)
+        scenario = Scenarios.get_scenario(guild_id, channel_id)
+        await ctx.send("Processando...")
+        scenario.remove_character(name)
+        await ctx.send(file=File(scenario.get_image(), filename='play_mat.png'))
 
     @command(aliases=['m', 'mc', 'move_char', 'movecharacter', 'move'],
              help="""Moves a character
@@ -115,20 +99,10 @@ class CharacterCommands(Cog):
         @param name: the name of the character to be moved
         @param movement: the movement of the character as described in the command description
         """
-        try:
-            guild_id = str(ctx.guild.id)
-            channel_id = str(ctx.channel.id)
-            scenario = Scenarios.get_scenario(guild_id, channel_id)
-            await ctx.send("Processando...")
-            scenario.move_character(name, movement)
-            await ctx.send(file=File(scenario.get_image(True), filename='play_mat.png'))
-        except KeyError:
-            await ctx.send("Ainda não há um mapa criado nesse canal...")
-            traceback.print_exc()
-        except CharacterNotFoundException:
-            await ctx.send("Token {} não encontrado".format(name))
-        except InvalidMovementException:
-            await ctx.send("Movimento Inválido")
-        except ValueError:
-            await ctx.send("Erro na interpretação do comando...")
-            traceback.print_exc()
+
+        guild_id = str(ctx.guild.id)
+        channel_id = str(ctx.channel.id)
+        scenario = Scenarios.get_scenario(guild_id, channel_id)
+        await ctx.send("Processando...")
+        scenario.move_character(name, movement)
+        await ctx.send(file=File(scenario.get_image(True), filename='play_mat.png'))

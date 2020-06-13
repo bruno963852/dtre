@@ -44,19 +44,14 @@ class ScenarioCommands(Cog):
         @param offset_y: Offset in pixels for starting drawing the squares from the top side
         @return: None
         """
-        try:
-            url = get_attachment(ctx, url)
-            guild_id = str(ctx.guild.id)
-            channel_id = str(ctx.channel.id)
-            await ctx.send("Processando...")
-            scenario = Scenario(guild_id, channel_id, name=name, map_url=url, offset_pixels=(offset_x, offset_y),
-                                square_size=square_size)
-            Scenarios.put_scenario(guild_id, channel_id,  scenario)
-            await ctx.send(file=File(scenario.get_image(), filename='play_mat.png'))
-        except KeyError:
-            traceback.print_exc()
-        except ValueError:
-            traceback.print_exc()
+        url = get_attachment(ctx, url)
+        guild_id = str(ctx.guild.id)
+        channel_id = str(ctx.channel.id)
+        await ctx.send("Processando...")
+        scenario = Scenario(guild_id, channel_id, name=name, map_url=url, offset_pixels=(offset_x, offset_y),
+                            square_size=square_size)
+        Scenarios.put_scenario(guild_id, channel_id,  scenario)
+        await ctx.send(file=File(scenario.get_image(), filename='play_mat.png'))
 
     @command(aliases=['s'],
              help="""Saves the scenario in json form to be loaded later
@@ -72,17 +67,12 @@ class ScenarioCommands(Cog):
         Saves the scenario in json form to be loaded later
         @param ctx: Context passed by the API
         """
-        try:
-            guild_id = str(ctx.guild.id)
-            channel_id = str(ctx.channel.id)
-            await ctx.send("Processando...")
-            d = Scenarios.get_scenario(guild_id, channel_id).dict
-            message = "```{}```".format(json.dumps(d))
-            await ctx.send(message)
-        except KeyError:
-            traceback.print_exc()
-        except ValueError:
-            traceback.print_exc()
+        guild_id = str(ctx.guild.id)
+        channel_id = str(ctx.channel.id)
+        await ctx.send("Processando...")
+        d = Scenarios.get_scenario(guild_id, channel_id).dict
+        message = "```{}```".format(json.dumps(d))
+        await ctx.send(message)
 
     @command(aliases=['l'],
              help="""Loads the scenario from a json
@@ -105,15 +95,10 @@ class ScenarioCommands(Cog):
         @param json_str: the json to be loaded.
         @return:
         """
-        try:
-            guild_id = str(ctx.guild.id)
-            channel_id = str(ctx.channel.id)
-            await ctx.send("Processando...")
-            dict_ = json.loads(json_str)
-            scenario = Scenario.from_dict(dict_, guild_id, channel_id)
-            Scenarios.put_scenario(guild_id, channel_id, scenario)
-            await ctx.send(file=File(scenario.get_image(), filename='play_mat.png'))
-        except KeyError:
-            traceback.print_exc()
-        except ValueError:
-            traceback.print_exc()
+        guild_id = str(ctx.guild.id)
+        channel_id = str(ctx.channel.id)
+        await ctx.send("Processando...")
+        dict_ = json.loads(json_str)
+        scenario = Scenario.from_dict(dict_, guild_id, channel_id)
+        Scenarios.put_scenario(guild_id, channel_id, scenario)
+        await ctx.send(file=File(scenario.get_image(), filename='play_mat.png'))
