@@ -65,9 +65,18 @@ async def on_command_error(ctx, error):
 
     if isinstance(error, ignored):
         pass
-    
+
+    if isinstance(error, CharacterNotFoundException):
+        await ctx.send("**ERROR:** Character not found...")
+        return
+
+    elif isinstance(error, InvalidMovementException):
+        await ctx.send("**ERROR:** Invalid Movement...")
+        return
+
     elif isinstance(error, commands.UserInputError):
-        await ctx.send(f'There was an **error** in the command arguments...')
+        await ctx.send('There was an **error** in the command arguments...')
+        return
 
     elif isinstance(error, commands.DisabledCommand):
         return await ctx.send(f'{ctx.command} has been disabled...')
