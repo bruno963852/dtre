@@ -7,7 +7,7 @@ class DiceRollCommands(Cog):
         self.bot = bot
         self.parser = DiceParser()
 
-    @command(aliases=['r'],
+    @command(aliases=['r', 'R'],
              help="""Makes a dice roll indicated by the sent string in dice roll notation
                 xdy±z -> where "x" is the quantity of dice, "y" is how many face the dice have
                 and you can add or subtract a modifier "z"
