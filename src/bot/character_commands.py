@@ -12,7 +12,7 @@ class CharacterCommands(Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @command(aliases=['ac', 'addcharacter', 'addchar', 'add_char'],
+    @command(aliases=['ac', 'addcharacter', 'addchar', 'add_char', 'Ac'],
              help="""Adds a character to the scenario
                 params:
                 name: Name of the character
@@ -49,11 +49,11 @@ class CharacterCommands(Cog):
             if len(attachments) > 0:
                 url = attachments[0].url
         scenario = Scenarios.get_scenario(guild_id, channel_id)
-        await ctx.send("Processando...")
+        await ctx.send("Processing...")
         scenario.add_character(name, url, (position_x, position_y))
         await ctx.send(file=File(scenario.get_image(), filename='play_mat.png'))
 
-    @command(aliases=['rc', 'removecharacter', 'removechar', 'remove_char'],
+    @command(aliases=['rc', 'removecharacter', 'removechar', 'remove_char', 'Rc'],
              help="""Removes a character from the scenario
                 params:
                 ctx: Context passed by the API
@@ -73,11 +73,11 @@ class CharacterCommands(Cog):
         guild_id = str(ctx.guild.id)
         channel_id = str(ctx.channel.id)
         scenario = Scenarios.get_scenario(guild_id, channel_id)
-        await ctx.send("Processando...")
+        await ctx.send("Processing...")
         scenario.remove_character(name)
         await ctx.send(file=File(scenario.get_image(), filename='play_mat.png'))
 
-    @command(aliases=['m', 'mc', 'move_char', 'movecharacter', 'move'],
+    @command(aliases=['m', 'mc', 'move_char', 'movecharacter', 'move', 'M'],
              help="""Moves a character
                 The movement is defined by directions separated by spaces,
                 the directions can be the orthogonal (u = up, l = left, d = down, ur = righ) or
@@ -103,6 +103,6 @@ class CharacterCommands(Cog):
         guild_id = str(ctx.guild.id)
         channel_id = str(ctx.channel.id)
         scenario = Scenarios.get_scenario(guild_id, channel_id)
-        await ctx.send("Processando...")
+        await ctx.send("Processing...")
         scenario.move_character(name, movement)
         await ctx.send(file=File(scenario.get_image(True), filename='play_mat.png'))

@@ -22,7 +22,7 @@ DESCRIPTION = '''DTRE is a tabletop rpg engine to be used in discord. If you're 
 but want some more functionality and want a simple streamlined roleplaying experience directly on discord, 
 with no external apps, and that can be easily playable on mobile search no further. '''
 
-COMMAND_PREFIXES = ('?drpg.', '!dprg.', '?r.', '!r.')
+COMMAND_PREFIXES = ('?dtre.', '!dtre.', '?r.', '!r.', '?Dtre.', '!Dtre.', '?DTRE.', '!DTRE.', '?R.', '!R.')
 
 DM_CHANNEL_NAME = 'DTRE_DM'
 
