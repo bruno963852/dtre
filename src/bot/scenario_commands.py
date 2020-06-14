@@ -1,10 +1,9 @@
-import traceback
 import json
-import src.bot.dontpad as dontpad
 
 from discord import File
 from discord.ext.commands import Cog, command, Context
 
+from src.bot import dontpad
 from src.bot.common_functions import get_attachment
 from src.scenario import Scenario
 from src.scenario.scenarios import Scenarios

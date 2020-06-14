@@ -1,5 +1,7 @@
 import src.bot as bot
-import logging
+
 import sys
+
+sys.path.append('/src')
 
 bot.run()
