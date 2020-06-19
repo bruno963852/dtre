@@ -2,6 +2,7 @@ import logging
 import os
 import sys
 import traceback
+from concurrent.futures.thread import ThreadPoolExecutor
 from typing import Dict
 
 from discord import File, User
@@ -27,6 +28,7 @@ COMMAND_PREFIXES = ('?dtre.', '!dtre.', '?r.', '!r.', '?Dtre.', '!Dtre.', '?DTRE
 DM_CHANNEL_NAME = 'DTRE_DM'
 
 bot = commands.Bot(command_prefix=COMMAND_PREFIXES, description=DESCRIPTION)
+bot.loop.set_default_executor(ThreadPoolExecutor(max_workers=5))
 
 
 @bot.event
@@ -51,10 +53,13 @@ async def on_ready():
 
 
 @bot.event
-async def on_command_error(ctx, error):
+async def on_command_error(ctx: Context, error: Exception):
     """The event triggered when an error is raised while invoking a command.
     ctx   : Context
     error : Exception"""
+
+    logging.error(
+        f'**Command Sender:** {ctx.author.display_name}\n**Server:** {ctx.guild.name}\n**Channel:** {ctx.channel.name}')
 
     if hasattr(ctx.command, 'on_error'):
         return
@@ -90,9 +95,9 @@ async def on_command_error(ctx, error):
         if ctx.command.qualified_name == 'tag list':
             return await ctx.send('I could not find that member. Please try again.')
 
-    await ctx.send('I rolled a **Critical Failure** executinng that command...')
-
-    logging.error('Ignoring exception in command {}:'.format(ctx.command))
+    await ctx.send('I rolled a **Critical Failure** executing that command...')
+    logging.error(f'Ignoring exception in command: {ctx.command}')
+    logging.error(f'ERROR: {type(error)}')
     logging.error('Stack info', stack_info=True)
     traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 

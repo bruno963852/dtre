@@ -1,7 +1,7 @@
 import json
 
 from discord import File
-from discord.ext.commands import Cog, command, Context
+from discord.ext.commands import Cog, command, Context, Bot
 
 from src.bot import dontpad
 from src.bot.common_functions import get_attachment
@@ -12,8 +12,36 @@ DTRE_URL = 'dtre_scenarios'
 
 
 class ScenarioCommands(Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: Bot):
         self.bot = bot
+
+    @staticmethod
+    def _create_scenario(guild_id, channel_id, name, url, offset_x, offset_y, square_size) -> File:
+        scenario = Scenario(guild_id, channel_id, name=name, map_url=url, offset_pixels=(offset_x, offset_y),
+                            square_size=square_size)
+        Scenarios.put_scenario(guild_id, channel_id, scenario)
+        return File(scenario.get_image(), filename='play_mat.png')
+
+    @staticmethod
+    def _save_scenario(guild_id, channel_id, url: str):
+        scenario_dict = Scenarios.get_scenario(guild_id, channel_id).dict
+        scenario_json = json.dumps(scenario_dict)
+        dontpad.write(url, scenario_json)
+
+    @staticmethod
+    def _load_scenario_dontpad(guild_id, channel_id, dontpad_url) -> File:
+        dontpad_content = dontpad.read(dontpad_url)
+        dict_ = json.loads(dontpad_content)
+        scenario = Scenario.from_dict(dict_, guild_id, channel_id)
+        Scenarios.put_scenario(guild_id, channel_id, scenario)
+        return File(scenario.get_image(), filename='play_mat.png')
+
+    @staticmethod
+    def _load_scenario_json(guild_id, channel_id, json_str) -> File:
+        dict_ = json.loads(json_str)
+        scenario = Scenario.from_dict(dict_, guild_id, channel_id)
+        Scenarios.put_scenario(guild_id, channel_id, scenario)
+        return File(scenario.get_image(), filename='play_mat.png')
 
     @command(aliases=['c', 'C'],
              help="""Creates a scenario with the specified name
@@ -30,7 +58,7 @@ class ScenarioCommands(Cog):
                 response: The map of the scenario. If only the name is passed, the default map is created
                 """,
              )
-    async def create(self, ctx: Context, name: str, square_size: int = 64, url: str = '', offset_x: int = 0,
+    async def create(self, ctx: Context, name: str = 'unnamed lands', square_size: int = 64, url: str = '', offset_x: int = 0,
                      offset_y: int = 0):
         """
         Creates a scenario with the specified name
@@ -50,10 +78,9 @@ class ScenarioCommands(Cog):
         guild_id = str(ctx.guild.id)
         channel_id = str(ctx.channel.id)
         await ctx.send("Processando...")
-        scenario = Scenario(guild_id, channel_id, name=name, map_url=url, offset_pixels=(offset_x, offset_y),
-                            square_size=square_size)
-        Scenarios.put_scenario(guild_id, channel_id, scenario)
-        await ctx.send(file=File(scenario.get_image(), filename='play_mat.png'))
+        image = await self.bot.loop.run_in_executor(None, self._create_scenario, guild_id, channel_id, name, url,
+                                                    offset_x, offset_y, square_size)
+        await ctx.send(file=image)
 
     @command(aliases=['s', 'S'],
              help="""Saves the scenario in json form to be loaded later. The json is posted in a dontpad url
@@ -73,9 +100,7 @@ class ScenarioCommands(Cog):
         channel_id = str(ctx.channel.id)
         url = f'{DTRE_URL}/{guild_id}/{channel_id}/'
         await ctx.send("Processing...")
-        scenario_dict = Scenarios.get_scenario(guild_id, channel_id).dict
-        scenario_json = json.dumps(scenario_dict)
-        dontpad.write(url, scenario_json)
+        await self.bot.loop.run_in_executor(None, self._save_scenario, guild_id, channel_id, url)
         await ctx.send(f'Json of the scenario saved in {dontpad.DONTPAD_BASE_URL + url}')
 
     @command(aliases=['l', 'L'],
@@ -105,11 +130,8 @@ class ScenarioCommands(Cog):
         elif dontpad.DONTPAD_BASE_URL in dontpad_url:
             dontpad_url = dontpad_url[len(dontpad.DONTPAD_BASE_URL):]
         await ctx.send("Processing...")
-        dontpad_content = dontpad.read(dontpad_url)
-        dict_ = json.loads(dontpad_content)
-        scenario = Scenario.from_dict(dict_, guild_id, channel_id)
-        Scenarios.put_scenario(guild_id, channel_id, scenario)
-        await ctx.send(file=File(scenario.get_image(), filename='play_mat.png'))
+        image = await self.bot.loop.run_in_executor(None, self._load_scenario_dontpad, guild_id, channel_id, dontpad_url)
+        await ctx.send(file=image)
 
     @command(aliases=['lj', 'loadjson', 'Lj'],
              help="""Loads the scenario from a json
@@ -135,9 +157,5 @@ class ScenarioCommands(Cog):
         guild_id = str(ctx.guild.id)
         channel_id = str(ctx.channel.id)
         await ctx.send("Processing...")
-        dict_ = json.loads(json_str)
-        scenario = Scenario.from_dict(dict_, guild_id, channel_id)
-        Scenarios.put_scenario(guild_id, channel_id, scenario)
-        await ctx.send(file=File(scenario.get_image(), filename='play_mat.png'))
-
-
+        image = await self.bot.loop.run_in_executor(None, self._load_scenario_json, guild_id, channel_id, json_str)
+        await ctx.send(file=image)

@@ -70,8 +70,8 @@ class Scenario:
             raise CharacterNotFoundException
         del self.characters[name]
 
-    def add_character(self, name: str, url: str, position: Tuple[int, int] = (0, 0)):
-        token = Token(name, position, url, self.map.square_size, self._server_id, self._channel_id)
+    def add_character(self, name: str, url: str, position: Tuple[int, int] = (0, 0), size: Tuple[int, int] = (1, 1)):
+        token = Token(name, position, url, self.map.square_size, self._server_id, self._channel_id, size)
         self.characters[name] = Character(name, token)
 
     def move_character(self, name: str, movement: str):
