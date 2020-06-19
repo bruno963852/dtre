@@ -62,7 +62,7 @@ class Scenario:
         chars = dict_[_ATTR_CHARACTERS]
         for char_dict in chars:
             char = Character.from_dict(char_dict, server_id, channel_id, map_.square_size)
-            scenario.add_character(char.name, char.token.image_url, char.token.position)
+            scenario.add_character(char.name, char.token.image_url, char.token.position, char.token.size)
         return scenario
 
     def remove_character(self, name: str):
