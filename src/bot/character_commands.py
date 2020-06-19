@@ -12,6 +12,24 @@ class CharacterCommands(Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @staticmethod
+    def _add_character(guild_id, channel_id, name, url, position_x, position_y, size_x, size_y) -> File:
+        scenario = Scenarios.get_scenario(guild_id, channel_id)
+        scenario.add_character(name, url, (position_x, position_y), (size_x, size_y))
+        return File(scenario.get_image(), filename='play_mat.png')
+
+    @staticmethod
+    def _remove_character(guild_id, channel_id, name) -> File:
+        scenario = Scenarios.get_scenario(guild_id, channel_id)
+        scenario.remove_character(name)
+        return File(scenario.get_image(), filename='play_mat.png')
+
+    @staticmethod
+    def _move_character(guild_id, channel_id, name, movement):
+        scenario = Scenarios.get_scenario(guild_id, channel_id)
+        scenario.move_character(name, movement)
+        return File(scenario.get_image(True), filename='play_mat.png')
+
     @command(aliases=['ac', 'addcharacter', 'addchar', 'add_char', 'Ac'],
              help="""Adds a character to the scenario
                 params:
@@ -29,7 +47,7 @@ class CharacterCommands(Cog):
                 """,
              )
     async def add_character(self, ctx: Context, name: str, position_x: int, position_y: int, url: str = '',
-                            size_x: int = 1, size_y: int = 2):
+                            size_x: int = 1, size_y: int = 1):
         """
         Adds a character to the scenario
         @param ctx: the context passed by the API
@@ -48,10 +66,11 @@ class CharacterCommands(Cog):
             attachments = ctx.message.attachments
             if len(attachments) > 0:
                 url = attachments[0].url
-        scenario = Scenarios.get_scenario(guild_id, channel_id)
+
         await ctx.send("Processing...")
-        scenario.add_character(name, url, (position_x, position_y))
-        await ctx.send(file=File(scenario.get_image(), filename='play_mat.png'))
+        image = await self.bot.loop.run_in_executor(None, self._add_character, guild_id, channel_id, name, url,
+                                                    position_x, position_y, size_x, size_y)
+        await ctx.send(file=image)
 
     @command(aliases=['rc', 'removecharacter', 'removechar', 'remove_char', 'Rc'],
              help="""Removes a character from the scenario
@@ -72,10 +91,9 @@ class CharacterCommands(Cog):
         """
         guild_id = str(ctx.guild.id)
         channel_id = str(ctx.channel.id)
-        scenario = Scenarios.get_scenario(guild_id, channel_id)
         await ctx.send("Processing...")
-        scenario.remove_character(name)
-        await ctx.send(file=File(scenario.get_image(), filename='play_mat.png'))
+        image = await self.bot.loop.run_in_executor(None, self._add_character, guild_id, channel_id, name)
+        await ctx.send(file=image)
 
     @command(aliases=['m', 'mc', 'move_char', 'movecharacter', 'move', 'M'],
              help="""Moves a character
@@ -104,5 +122,5 @@ class CharacterCommands(Cog):
         channel_id = str(ctx.channel.id)
         scenario = Scenarios.get_scenario(guild_id, channel_id)
         await ctx.send("Processing...")
-        scenario.move_character(name, movement)
-        await ctx.send(file=File(scenario.get_image(True), filename='play_mat.png'))
+        image = await self.bot.loop.run_in_executor(None, self._add_character, guild_id, channel_id, name, movement)
+        await ctx.send(file=image)

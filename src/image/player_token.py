@@ -8,8 +8,8 @@ ATTR_FRAME_URL = 'frame_url'
 
 class Token(TokenImageProcessor):
     def __init__(self, name: str, position: Tuple[int, int], image_url: str, square_size: int, server_id: str,
-                 channel_id: str, frame_url: str = DEFAULT_TOKEN_FRAME_FILE):
-        super().__init__(name, position, image_url, square_size, server_id, channel_id, frame_url)
+                 channel_id: str, size: Tuple[int, int] = (1, 1), frame_url: str = DEFAULT_TOKEN_FRAME_FILE):
+        super().__init__(name, position, image_url, square_size, server_id, channel_id, size, frame_url)
 
     @property
     def name(self) -> str:
