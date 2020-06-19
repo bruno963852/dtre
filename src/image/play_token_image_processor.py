@@ -16,7 +16,7 @@ FRAME_FILE_SUFFIX = '_frame.png'
 class TokenImageProcessor(ImageProcessor, ABC):
 
     def __init__(self, name: str, position: Tuple[int, int], image_url: str, square_size: int, server_id: str,
-                 channel_id: str, size: Tuple[int, int] = (1, 1), frame_url: str = DEFAULT_TOKEN_FRAME_FILE):
+                 channel_id: str, size: Tuple[int, int], frame_url: str = DEFAULT_TOKEN_FRAME_FILE):
         super().__init__(server_id, channel_id, image_url, square_size)
         self._position = position
         self._name = name

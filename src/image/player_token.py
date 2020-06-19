@@ -4,16 +4,22 @@ from src.image.play_token_image_processor import TokenImageProcessor, DEFAULT_TO
 ATTR_POSITION = 'position'
 ATTR_IMAGE_URL = 'image_url'
 ATTR_FRAME_URL = 'frame_url'
+ATTR_SIZE_Y = 'size_y'
+ATTR_SIZE_X = 'size_x'
 
 
 class Token(TokenImageProcessor):
     def __init__(self, name: str, position: Tuple[int, int], image_url: str, square_size: int, server_id: str,
-                 channel_id: str, size: Tuple[int, int] = (1, 1), frame_url: str = DEFAULT_TOKEN_FRAME_FILE):
+                 channel_id: str, size: Tuple[int, int], frame_url: str = DEFAULT_TOKEN_FRAME_FILE):
         super().__init__(name, position, image_url, square_size, server_id, channel_id, size, frame_url)
 
     @property
     def name(self) -> str:
         return self._name
+
+    @property
+    def size(self) -> Tuple[int, int]:
+        return self._size
 
     @property
     def url(self) -> str:
@@ -40,7 +46,9 @@ class Token(TokenImageProcessor):
         return {
             ATTR_POSITION: self.position,
             ATTR_IMAGE_URL: self._image_url,
-            ATTR_FRAME_URL: self._frame_url
+            ATTR_FRAME_URL: self._frame_url,
+            ATTR_SIZE_X: self._size[0],
+            ATTR_SIZE_Y: self._size[1]
         }
 
     def increment_position(self, x: int = 0, y: int = 0):
@@ -55,5 +63,6 @@ class Token(TokenImageProcessor):
             square_size=square_size,
             position=tuple(dict_[ATTR_POSITION]),
             image_url=dict_[ATTR_IMAGE_URL],
-            frame_url=dict_[ATTR_FRAME_URL]
+            frame_url=dict_[ATTR_FRAME_URL],
+            size=(dict_[ATTR_SIZE_X], dict_[ATTR_SIZE_Y])
         )
