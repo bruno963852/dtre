@@ -56,8 +56,8 @@ class CharacterCommands(Cog):
         @param position_y: position for the character token in the map on the y axis (from top)
         @param url: url of the image to be used as token (The image will be resized and cropped to a circle and put in
         a frame)
-        @param size_x: the size in map squares of the token in the x axis (not supported yet, omit this parameter)
-        @param size_y: the size in map squares of the token in the y axis (not supported yet, omit this parameter)
+        @param size_x: the size in map squares of the token in the x axis
+        @param size_y: the size in map squares of the token in the y axis
         @return: None
         """
         guild_id = str(ctx.guild.id)
@@ -122,5 +122,5 @@ class CharacterCommands(Cog):
         channel_id = str(ctx.channel.id)
         scenario = Scenarios.get_scenario(guild_id, channel_id)
         await ctx.send("Processing...")
-        image = await self.bot.loop.run_in_executor(None, self._add_character, guild_id, channel_id, name, movement)
+        image = await self.bot.loop.run_in_executor(None, self._move_character, guild_id, channel_id, name, movement)
         await ctx.send(file=image)
