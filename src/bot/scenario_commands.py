@@ -5,10 +5,9 @@ from discord.ext.commands import Cog, command, Context, Bot
 
 from src.bot import dontpad
 from src.bot.common_functions import get_attachment
+from src.bot.dontpad import DTRE_URL
 from src.scenario import Scenario
 from src.scenario.scenarios import Scenarios
-
-DTRE_URL = 'dtre_scenarios'
 
 
 class ScenarioCommands(Cog):

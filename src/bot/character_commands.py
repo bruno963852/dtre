@@ -1,11 +1,30 @@
+import json
 import traceback
 
 from discord import File
 from discord.ext.commands import Cog, command, Context
 
-from src.image.exceptions import CharacterNotFoundException, InvalidMovementException
+from src.bot import dontpad
+from src.bot.dontpad import DTRE_URL
+from src.char import Character
+from src.image.exceptions import CharacterNotFoundInScenarioException, InvalidMovementException, \
+    CharacterNotFoundInDatabaseException
+from src.image.player_token import Token
 from src.scenario import Scenario
 from src.scenario.scenarios import Scenarios
+
+
+def _get_char_data(guild_id: str, channel_id: str):
+    url = f'{DTRE_URL}/{guild_id}/{channel_id}/chars'
+    data = dontpad.read(url)
+    if data is None:
+        data = '{}'
+    return json.loads(data)
+
+
+def _save_char_data(guild_id: str, channel_id: str, char_data: dict):
+    url = f'{DTRE_URL}/{guild_id}/{channel_id}/chars'
+    dontpad.write(url, json.dumps(char_data))
 
 
 class CharacterCommands(Cog):
@@ -15,7 +34,19 @@ class CharacterCommands(Cog):
     @staticmethod
     def _add_character(guild_id, channel_id, name, url, position_x, position_y, size_x, size_y) -> File:
         scenario = Scenarios.get_scenario(guild_id, channel_id)
-        scenario.add_character(name, url, (position_x, position_y), (size_x, size_y))
+        char = Character(
+            name,
+            Token(
+                name,
+                (position_x, position_y),
+                url,
+                scenario.map.square_size,
+                guild_id,
+                channel_id,
+                (size_x, size_y)
+            )
+        )
+        scenario.add_character(char)
         return File(scenario.get_image(), filename='play_mat.png')
 
     @staticmethod
@@ -29,6 +60,29 @@ class CharacterCommands(Cog):
         scenario = Scenarios.get_scenario(guild_id, channel_id)
         scenario.move_character(name, movement)
         return File(scenario.get_image(True), filename='play_mat.png')
+
+    @staticmethod
+    def _save_character(guild_id, channel_id, name):
+        scenario = Scenarios.get_scenario(guild_id, channel_id)
+        try:
+            char = scenario.characters[name]  # type: Character
+            char_data = _get_char_data(guild_id, channel_id)
+            char_data[char.name] = char.dict
+            _save_char_data(guild_id, channel_id, char_data)
+        except KeyError:
+            raise CharacterNotFoundInScenarioException
+
+    @staticmethod
+    def _load_character(guild_id, channel_id, name):
+        scenario = Scenarios.get_scenario(guild_id, channel_id)
+        try:
+            char_data = _get_char_data(guild_id, channel_id)
+            char_dict = char_data[name]
+            char = Character.from_dict(char_dict, guild_id, channel_id, scenario.map.square_size)
+            scenario.add_character(char)
+            return File(scenario.get_image(), filename='play_mat.png')
+        except KeyError:
+            raise CharacterNotFoundInDatabaseException
 
     @command(aliases=['ac', 'addcharacter', 'addchar', 'add_char', 'Ac'],
              help="""Adds a character to the scenario
@@ -46,7 +100,7 @@ class CharacterCommands(Cog):
                 response: the map with the added token
                 """,
              )
-    async def add_character(self, ctx: Context, name: str, position_x: int, position_y: int, url: str = '',
+    async def add_character(self, ctx: Context, name: str, position_x: int = -1, position_y: int = -1, url: str = '',
                             size_x: int = 1, size_y: int = 1):
         """
         Adds a character to the scenario
@@ -62,12 +116,19 @@ class CharacterCommands(Cog):
         """
         guild_id = str(ctx.guild.id)
         channel_id = str(ctx.channel.id)
+
+        await ctx.send("Processing...")
+
+        if (position_x, position_y) == (-1, -1):
+            image = await self.bot.loop.run_in_executor(None, self._load_character, guild_id, channel_id, name)
+            await ctx.send(file=image)
+            return
+
         if url == '':
             attachments = ctx.message.attachments
             if len(attachments) > 0:
                 url = attachments[0].url
 
-        await ctx.send("Processing...")
         image = await self.bot.loop.run_in_executor(None, self._add_character, guild_id, channel_id, name, url,
                                                     position_x, position_y, size_x, size_y)
         await ctx.send(file=image)
@@ -86,13 +147,12 @@ class CharacterCommands(Cog):
     async def remove_character(self, ctx: Context, name: str):
         """
         Removes a character from the scenario
-        @param ctx: Context passed by the API
         @param name: the name of the character to be removed
         """
         guild_id = str(ctx.guild.id)
         channel_id = str(ctx.channel.id)
         await ctx.send("Processing...")
-        image = await self.bot.loop.run_in_executor(None, self._add_character, guild_id, channel_id, name)
+        image = await self.bot.loop.run_in_executor(None, self._remove_character, guild_id, channel_id, name)
         await ctx.send(file=image)
 
     @command(aliases=['m', 'mc', 'move_char', 'movecharacter', 'move', 'M'],
@@ -124,3 +184,25 @@ class CharacterCommands(Cog):
         await ctx.send("Processing...")
         image = await self.bot.loop.run_in_executor(None, self._move_character, guild_id, channel_id, name, movement)
         await ctx.send(file=image)
+
+    @command(aliases=['sc', 'savecharacter', 'savechar', 'save_char', 'Sc'],
+             help="""Saves a character in the permanent database
+                    params:
+                    name: the name of the character to be sved
+
+                    Examples:
+                    ?r.savechar valkor
+                    response: confirmation if the char has been saved
+                    """,
+             )
+    async def save_character(self, ctx: Context, name: str):
+        """
+        Removes a character from the scenario
+        @param ctx: Context passed by the API
+        @param name: the name of the character to be removed
+        """
+        guild_id = str(ctx.guild.id)
+        channel_id = str(ctx.channel.id)
+        await ctx.send("Processing...")
+        await self.bot.loop.run_in_executor(None, self._save_character, guild_id, channel_id, name)
+        await ctx.send(f'Character **{name}** saved successfully in the database!')

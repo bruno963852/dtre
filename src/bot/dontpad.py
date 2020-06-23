@@ -3,6 +3,7 @@ import urllib.parse as parse
 import json
 
 DONTPAD_BASE_URL = "http://dontpad.com/"
+DTRE_URL = 'dtre_scenarios'
 
 
 def write(page, content):
@@ -29,5 +30,4 @@ def read(page, full_json=False):
 
 
 if __name__ == "__main__":
-    print("==> POST:", write("dontpad.py", "test"))
-    print(read("dontpad.py"))
+    print(read('shiforits'))

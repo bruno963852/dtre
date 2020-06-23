@@ -1,4 +1,8 @@
-class CharacterNotFoundException(Exception):
+class CharacterNotFoundInScenarioException(Exception):
+    pass
+
+
+class CharacterNotFoundInDatabaseException(Exception):
     pass
 
 
@@ -7,4 +11,8 @@ class InvalidMovementException(Exception):
 
 
 class FrameWithoutAlphaException(Exception):
+    pass
+
+
+class InvalidPositionException(Exception):
     pass
