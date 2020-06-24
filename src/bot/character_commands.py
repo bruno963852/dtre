@@ -1,4 +1,5 @@
 import json
+import math
 import traceback
 
 from discord import File
@@ -188,7 +189,7 @@ class CharacterCommands(Cog):
     @command(aliases=['sc', 'savecharacter', 'savechar', 'save_char', 'Sc'],
              help="""Saves a character in the permanent database
                     params:
-                    name: the name of the character to be sved
+                    name: the name of the character to be saved
 
                     Examples:
                     ?r.savechar valkor
@@ -205,4 +206,62 @@ class CharacterCommands(Cog):
         channel_id = str(ctx.channel.id)
         await ctx.send("Processing...")
         await self.bot.loop.run_in_executor(None, self._save_character, guild_id, channel_id, name)
-        await ctx.send(f'Character **{name}** saved successfully in the database!')
+        await ctx.send(f'Character **{name}** saved successfully in the database!\n{dontpad.DONTPAD_BASE_URL}{DTRE_URL}/{guild_id}/{channel_id}/chars')
+
+    @command(aliases=['lc', 'listcharacters', 'listchars', 'list_chars', 'Lc'],
+             help="""List the names of the characters that are saved in the channel's dataase
+                        params:
+                        search: The partial or full name of the character to filter the result
+    
+                        Examples:
+                        ?r.listchars
+                        response: A list with character names
+                        """,
+             )
+    async def list_characters(self, ctx: Context, search: str = ''):
+        """
+        List the names of the characters that are saved in the channel's database
+        @param ctx: Context passed by the API
+        @param search: The partial or full name of the character to filter the result
+        """
+        guild_id = str(ctx.guild.id)
+        channel_id = str(ctx.channel.id)
+        await ctx.send("Processing...")
+        char_data = _get_char_data(guild_id, channel_id)
+        message = ''
+        for char_name in char_data:
+            if search in char_name:
+                message += f'- {char_name}\n'
+        if message == '':
+            if search == '':
+                message = "This channel's database is empty"
+            else:
+                message = f'No character was found with {search}'
+        await ctx.send(message)
+
+    @command(aliases=['dc', 'deletecharacter', 'deletechar', 'delete_chars', 'Dc'],
+             help="""Delete a character from the database
+                        params:
+                        name: the name of the character to be deleted from the database
+
+                        Examples:
+                        ?r.dc valkor
+                        response: If the character was deleted
+                        """,
+             )
+    async def delete_character(self, ctx: Context, name: str = ''):
+        """
+        Delete a character from the database
+        @param ctx: Context passed by the API
+        @param name: the name of the character to be deleted from the database
+        """
+        guild_id = str(ctx.guild.id)
+        channel_id = str(ctx.channel.id)
+        await ctx.send("Processing...")
+        char_data = _get_char_data(guild_id, channel_id)
+        if name not in char_data:
+            await ctx.send(f"Character {name} no found in this channel's database")
+        else:
+            del char_data[name]
+            _save_char_data(guild_id, channel_id, char_data)
+            await ctx.send(f"Character {name} was deleted successfully from this channel's database")

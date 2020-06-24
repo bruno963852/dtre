@@ -23,7 +23,7 @@ class ImageProcessor(ABC):
         return f'{IMAGE_CACHE_DIR}{self._server_id}/{self._channel_id}/'
 
     @abstractmethod
-    def get_image(self) -> Image:
+    def get_image(self, overwrite=False) -> Image:
         """
         Gets the processed image
         @rtype: Image
@@ -31,13 +31,13 @@ class ImageProcessor(ABC):
         """
         raise NotImplementedError
 
-    def get_image_bytes(self) -> BytesIO:
+    def get_image_bytes(self, overwrite=False) -> BytesIO:
         """
         Gets the processed image in BytesIO format
         @rtype: BytesIO
         @return: the processed image in BytesIO format
         """
-        img = self.get_image()
+        img = self.get_image(overwrite)
         image_bytes = BytesIO()
         img.save(image_bytes, quality=85, optimize=True, format='PNG')
         image_bytes.seek(0)

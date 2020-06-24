@@ -4,7 +4,7 @@ from io import BytesIO
 from typing import Tuple
 
 import requests
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageColor
 from os import path
 
 from src.image.image_processor import IMAGE_CACHE_DIR, ImageProcessor
@@ -16,38 +16,33 @@ FRAME_FILE_SUFFIX = '_frame.png'
 class TokenImageProcessor(ImageProcessor, ABC):
 
     def __init__(self, name: str, position: Tuple[int, int], image_url: str, square_size: int, server_id: str,
-                 channel_id: str, size: Tuple[int, int], frame_url: str = DEFAULT_TOKEN_FRAME_FILE):
+                 channel_id: str, size: Tuple[int, int], frame_color: str, frame_secondary_color: str):
         super().__init__(server_id, channel_id, image_url, square_size)
         self._position = position
         self._name = name
         self._image_url = image_url
         self._server_id = server_id
         self._square_size = square_size
-        self._frame_url = frame_url
+        self._frame_color = frame_color
+        self._frame_secondary_color = frame_secondary_color
         self._size = size
         self._changed_frame = False
 
-    def set_frame(self, url):
-        self._get_frame(True)
-        self._get_token_image(True)
-
-    def _get_frame(self, overwrite: bool = False) -> Image:
-        frame_image_path = self._files_dir + self._name + f'_{self._size[0]}x{self._size[1]}' + FRAME_FILE_SUFFIX
-        if not overwrite and path.exists(frame_image_path):
-            img = Image.open(frame_image_path)
-        size = (self._square_size * self._size[0], self._square_size * self._size[1])
-        if self._frame_url.startswith('http'):
-            response = requests.get(self._frame_url)
-            img = Image.open(BytesIO(response.content))
-            if img.mode != 'RGBA':
-                img = img.convert(mode='RGBA')
-            img = img.resize(size, resample=Image.LANCZOS, reducing_gap=3.0)
-            return img
-        else:
-            img = Image.open(DEFAULT_TOKEN_FRAME_FILE)
-            img = img.resize(size, resample=Image.LANCZOS, reducing_gap=3.0)
-            img.save(frame_image_path, quality=85, optimize=True)
-            return img
+    def _get_frame(self) -> Image:
+        size_x, size_y = size = self._square_size * self._size[0], self._square_size * self._size[1]
+        image = Image.new('RGBA', size)
+        draw = ImageDraw.Draw(image)
+        thickness = math.ceil(size_x / 10)
+        outer_border_thickness = thickness/4
+        draw.ellipse((0, 0, size_x, size_y),
+                     None,
+                     ImageColor.getrgb(self._frame_color),
+                     thickness)
+        draw.ellipse((0, 0, size_x, size_y),
+                     None,
+                     ImageColor.getrgb(self._frame_secondary_color),
+                     int(outer_border_thickness))
+        return image
 
     def _get_token_image(self, overwrite=False) -> Image:
         cache_token_path = self._files_dir + self._name + '.png'
@@ -69,5 +64,5 @@ class TokenImageProcessor(ImageProcessor, ABC):
         img.save(cache_token_path, quality=85, optimize=True)
         return img
 
-    def get_image(self) -> Image:
-        return self._get_token_image()
+    def get_image(self, overwrite=False) -> Image:
+        return self._get_token_image(overwrite)

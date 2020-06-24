@@ -1,17 +1,23 @@
 from typing import Tuple
 from src.image.play_token_image_processor import TokenImageProcessor, DEFAULT_TOKEN_FRAME_FILE
 
-ATTR_POSITION = 'position'
-ATTR_IMAGE_URL = 'image_url'
-ATTR_FRAME_URL = 'frame_url'
-ATTR_SIZE_Y = 'size_y'
-ATTR_SIZE_X = 'size_x'
+_ATTR_POSITION = 'position'
+_ATTR_IMAGE_URL = 'image_url'
+_ATTR_FRAME_COLOR = 'frame_color'
+_ATTR_FRAME_SECONDARY_COLOR = 'frame_secondary_color'
+_ATTR_SIZE_Y = 'size_y'
+_ATTR_SIZE_X = 'size_x'
+
+_DEFAULT_COLOR = 'black'
+_DEFAULT_SEC_COLOR = 'lightgray'
 
 
 class Token(TokenImageProcessor):
     def __init__(self, name: str, position: Tuple[int, int], image_url: str, square_size: int, server_id: str,
-                 channel_id: str, size: Tuple[int, int], frame_url: str = DEFAULT_TOKEN_FRAME_FILE):
-        super().__init__(name, position, image_url, square_size, server_id, channel_id, size, frame_url)
+                 channel_id: str, size: Tuple[int, int], frame_color: str = _DEFAULT_COLOR,
+                 frame_secondary_color: str = _DEFAULT_SEC_COLOR):
+        super().__init__(name, position, image_url, square_size, server_id, channel_id, size, frame_color,
+                         frame_secondary_color)
 
     @property
     def name(self) -> str:
@@ -34,21 +40,22 @@ class Token(TokenImageProcessor):
         self._position = value
 
     @property
-    def frame_url(self) -> str:
-        return self._frame_url
+    def frame_color(self) -> str:
+        return self._frame_color
 
-    @frame_url.setter
-    def frame_url(self, value):
-        self._frame_url = value
+    @frame_color.setter
+    def frame_color(self, value):
+        self._frame_color = value
 
     @property
     def dict(self) -> dict:
         return {
-            ATTR_POSITION: self.position,
-            ATTR_IMAGE_URL: self._image_url,
-            ATTR_FRAME_URL: self._frame_url,
-            ATTR_SIZE_X: self._size[0],
-            ATTR_SIZE_Y: self._size[1]
+            _ATTR_POSITION: self.position,
+            _ATTR_IMAGE_URL: self._image_url,
+            _ATTR_FRAME_COLOR: self._frame_color,
+            _ATTR_FRAME_SECONDARY_COLOR: self._frame_secondary_color,
+            _ATTR_SIZE_X: self._size[0],
+            _ATTR_SIZE_Y: self._size[1]
         }
 
     def increment_position(self, x: int = 0, y: int = 0):
@@ -61,8 +68,15 @@ class Token(TokenImageProcessor):
             server_id=server_id,
             channel_id=channel_id,
             square_size=square_size,
-            position=tuple(dict_[ATTR_POSITION]),
-            image_url=dict_[ATTR_IMAGE_URL],
-            frame_url=dict_[ATTR_FRAME_URL],
-            size=(dict_[ATTR_SIZE_X], dict_[ATTR_SIZE_Y])
+            position=tuple(dict_[_ATTR_POSITION]),
+            image_url=dict_[_ATTR_IMAGE_URL],
+            frame_color=dict_[_ATTR_FRAME_COLOR],
+            frame_secondary_color=dict_[_ATTR_FRAME_SECONDARY_COLOR],
+            size=(dict_[_ATTR_SIZE_X], dict_[_ATTR_SIZE_Y])
         )
+
+
+if __name__ == '__main__':
+    tk = Token('ze', (1, 1), 'https://image.freepik.com/free-vector/chicken-fighter_1975-119.jpg', 64, '0000', '0000',
+               (2, 2), 'files/default_token_frame.png')
+    tk._get_frame().save('test.png')
