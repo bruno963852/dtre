@@ -1,4 +1,5 @@
 discord.py
 Pillow
 requests
-dice_parser
+xdice
+paho-mqtt

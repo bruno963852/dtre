@@ -1,6 +1,6 @@
 import json
 
-from discord import File
+from discord import File, Message
 from discord.ext.commands import Cog, command, Context, Bot
 
 from src.bot import dontpad
@@ -76,10 +76,11 @@ class ScenarioCommands(Cog):
         url = get_attachment(ctx, url)
         guild_id = str(ctx.guild.id)
         channel_id = str(ctx.channel.id)
-        await ctx.send("Processando...")
+        await ctx.send("Processing...")
         image = await self.bot.loop.run_in_executor(None, self._create_scenario, guild_id, channel_id, name, url,
                                                     offset_x, offset_y, square_size)
-        await ctx.send(file=image)
+        message = await ctx.send(file=image)
+        # await message.add_reaction("⬆")
 
     @command(aliases=['s', 'S'],
              help="""Saves the scenario in json form to be loaded later. The json is posted in a dontpad url

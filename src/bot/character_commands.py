@@ -76,10 +76,15 @@ class CharacterCommands(Cog):
     @staticmethod
     def _load_character(guild_id, channel_id, name):
         scenario = Scenarios.get_scenario(guild_id, channel_id)
+        alias = None
+        if '/' in name:
+            name, alias = name.split('/')
         try:
             char_data = _get_char_data(guild_id, channel_id)
             char_dict = char_data[name]
             char = Character.from_dict(char_dict, guild_id, channel_id, scenario.map.square_size)
+            if alias:
+                char.name = alias
             scenario.add_character(char)
             return File(scenario.get_image(), filename='play_mat.png')
         except KeyError:
