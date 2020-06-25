@@ -20,14 +20,18 @@ MODE_RGBA = 'RGBA'
 
 class PlaymatImageProcessor(ImageProcessor, ABC):
 
-    def __init__(self, server_id: str, channel_id, image_url: str, offset_pixels: Tuple[int, int], square_size: int):
+    def __init__(self, server_id: str, channel_id, image_url: str, offset_pixels: Tuple[int, int], square_size: int,
+                 zoom=1.0, crop_box: Tuple[int, int, int, int] = None,
+                 text_color: Tuple[int, int, int] = (255, 255, 255),
+                 movement_color: Tuple[int, int, int] = (0, 255, 255)):
         super().__init__(server_id, channel_id, image_url, square_size)
         self._offset_pixels = offset_pixels
         self.erase_cache()
         self._map_size = self._get_image_size()
-        self._crop_box = (0, 0) + self._map_size
-        self._zoom = 1.0
-        self._text_color = (0xff, 0xff, 0xff, 0xff)
+        self._crop_box = (0, 0) + self._map_size if crop_box is None else crop_box
+        self._zoom = zoom
+        self._text_color = text_color
+        self._movement_color = movement_color
 
     @property
     def size(self):
@@ -50,11 +54,11 @@ class PlaymatImageProcessor(ImageProcessor, ABC):
         img.save(cache_image_path, quality=85, optimize=True)
         return img
 
-    def get_image(self) -> Image:
+    def get_image(self, overwrite=False) -> Image:
         cache_image_path = self._files_dir + BACKGROUND_GRIDDED_FILENAME
         if path.exists(cache_image_path):
             return Image.open(cache_image_path)
-        img = self._get_background()
+        img = self._get_background(overwrite)
 
         if img.mode != MODE_RGBA:
             img = img.convert(mode=MODE_RGBA)
@@ -101,8 +105,8 @@ class PlaymatImageProcessor(ImageProcessor, ABC):
         size_y = int((img.size[1] - self._offset_pixels[1]) / self._square_size)
         return size_x, size_y
 
-    def get_full_map(self, characters: Dict[str, Character], movement: List[Tuple[int, int]] = None):
-        img = self.get_image()
+    def get_full_map(self, characters: Dict[str, Character], movement: List[Tuple[int, int]] = None, overwrite=False):
+        img = self.get_image(overwrite)
 
         size_x, size_y = self._map_size
         offset_x, offset_y = self._offset_pixels
@@ -121,7 +125,7 @@ class PlaymatImageProcessor(ImageProcessor, ABC):
                                     (pos_x + size, pos_y + size),
                                     (pos_x + self._square_size - size, pos_y + self._square_size - size)
                                 ),
-                                fill=ImageColor.getrgb('cyan')
+                                fill=self._movement_color
                             )
                 for char in characters.values():
                     if char.token.position == (x, y):
@@ -134,3 +138,10 @@ class PlaymatImageProcessor(ImageProcessor, ABC):
         image_bytes.seek(0)
         return image_bytes
 
+    def set_text_color(self, color: str):
+        imgcolor = ImageColor.getrgb(color)
+        self._text_color = imgcolor
+
+    def set_movement_color(self, color: str):
+        imgcolor = ImageColor.getrgb(color)
+        self._movement_color = imgcolor

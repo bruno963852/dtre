@@ -14,7 +14,7 @@ from src.bot.dice_roll_commands import DiceRollCommands
 from src.bot.discord_logging_handler import DiscordLoggingHandler
 from src.bot.misc_commands import MiscCommands
 from src.bot.scenario_commands import ScenarioCommands
-from src.image.exceptions import CharacterNotFoundException, InvalidMovementException, FrameWithoutAlphaException
+from src.image.exceptions import CharacterNotFoundInScenarioException, InvalidMovementException, FrameWithoutAlphaException
 from src.scenario import Scenario
 
 TOKEN = os.environ["DISCORD_TOKEN"]
@@ -24,8 +24,6 @@ but want some more functionality and want a simple streamlined roleplaying exper
 with no external apps, and that can be easily playable on mobile search no further. '''
 
 COMMAND_PREFIXES = ('?dtre.', '!dtre.', '?r.', '!r.', '?Dtre.', '!Dtre.', '?DTRE.', '!DTRE.', '?R.', '!R.')
-
-DM_CHANNEL_NAME = 'DTRE_DM'
 
 bot = commands.Bot(command_prefix=COMMAND_PREFIXES, description=DESCRIPTION)
 bot.loop.set_default_executor(ThreadPoolExecutor(max_workers=5))
@@ -70,7 +68,7 @@ async def on_command_error(ctx: Context, error: Exception):
     if isinstance(error, ignored):
         pass
 
-    if isinstance(error, CharacterNotFoundException):
+    if isinstance(error, CharacterNotFoundInScenarioException):
         await ctx.send("**ERROR:** Character not found...")
         return
 

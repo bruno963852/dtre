@@ -1,7 +1,7 @@
 from typing import Tuple
 
 from src.char import Character
-from src.image.exceptions import CharacterNotFoundException, InvalidMovementException
+from src.image.exceptions import CharacterNotFoundInScenarioException, InvalidMovementException
 from src.image.player_token import Token
 from src.image.playmat import Playmat
 
@@ -62,22 +62,21 @@ class Scenario:
         chars = dict_[_ATTR_CHARACTERS]
         for char_dict in chars:
             char = Character.from_dict(char_dict, server_id, channel_id, map_.square_size)
-            scenario.add_character(char.name, char.token.image_url, char.token.position, char.token.size)
+            scenario.add_character(char)
         return scenario
 
     def remove_character(self, name: str):
         if name not in self.characters:
-            raise CharacterNotFoundException
+            raise CharacterNotFoundInScenarioException
         del self.characters[name]
 
-    def add_character(self, name: str, url: str, position: Tuple[int, int] = (0, 0), size: Tuple[int, int] = (1, 1)):
-        token = Token(name, position, url, self.map.square_size, self._server_id, self._channel_id, size)
-        self.characters[name] = Character(name, token)
+    def add_character(self, character: Character):
+        self.characters[character.name] = character
 
     def move_character(self, name: str, movement: str):
         moves = movement.split()
         if name not in self.characters:
-            raise CharacterNotFoundException
+            raise CharacterNotFoundInScenarioException
         char = self.characters[name]
         self._last_movement = [char.token.position]
         previous_position = char.token.position
