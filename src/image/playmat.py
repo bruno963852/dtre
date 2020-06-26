@@ -46,3 +46,4 @@ class Playmat(PlaymatImageProcessor):
             zoom=dict_[_ATTR_TEXT_COLOR],
             movement_color=dict_[_ATTR_MOVEMENT_COLOR]
         )
+
