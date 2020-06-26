@@ -14,6 +14,7 @@ from src.bot.dice_roll_commands import DiceRollCommands
 from src.bot.discord_logging_handler import DiscordLoggingHandler
 from src.bot.misc_commands import MiscCommands
 from src.bot.scenario_commands import ScenarioCommands
+from src.char import Character
 from src.image.exceptions import CharacterNotFoundInScenarioException, InvalidMovementException, FrameWithoutAlphaException
 from src.scenario import Scenario
 
@@ -38,7 +39,7 @@ async def on_ready():
 
     # noinspection PyArgumentList
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.WARNING,
         format="-------------------------------\n*%(asctime)s* **[%(levelname)s]** \n**Message:** %(message)s",
         handlers=[
             logging.FileHandler('../debug.log'),
@@ -47,7 +48,7 @@ async def on_ready():
         ]
     )
 
-    logging.info(f'Logged in as "{bot.user.name}" / {bot.user.id}')
+    logging.warning(f'Logged in as "{bot.user.name}" / {bot.user.id}')
 
 
 @bot.event
@@ -58,6 +59,7 @@ async def on_command_error(ctx: Context, error: Exception):
 
     logging.error(
         f'**Command Sender:** {ctx.author.display_name}\n**Server:** {ctx.guild.name}\n**Channel:** {ctx.channel.name}')
+    logging.error(f'**Message:**: {ctx.message.content}')
 
     if hasattr(ctx.command, 'on_error'):
         return

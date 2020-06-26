@@ -1,11 +1,13 @@
 import json
 import math
 import traceback
+from typing import Tuple
 
 from discord import File
 from discord.ext.commands import Cog, command, Context
 
 from src.bot import dontpad
+from src.bot.common import post_scenario
 from src.bot.dontpad import DTRE_URL
 from src.char import Character
 from src.image.exceptions import CharacterNotFoundInScenarioException, InvalidMovementException, \
@@ -33,7 +35,7 @@ class CharacterCommands(Cog):
         self.bot = bot
 
     @staticmethod
-    def _add_character(guild_id, channel_id, name, url, position_x, position_y, size_x, size_y) -> File:
+    def _add_character(guild_id, channel_id, name, url, position_x, position_y, size_x, size_y) -> Tuple[File, dict]:
         scenario = Scenarios.get_scenario(guild_id, channel_id)
         char = Character(
             name,
@@ -48,19 +50,19 @@ class CharacterCommands(Cog):
             )
         )
         scenario.add_character(char)
-        return File(scenario.get_image(), filename='play_mat.png')
+        return File(scenario.get_image(), filename='play_mat.png'), scenario.characters
 
     @staticmethod
-    def _remove_character(guild_id, channel_id, name) -> File:
+    def _remove_character(guild_id, channel_id, name) -> Tuple[File, dict]:
         scenario = Scenarios.get_scenario(guild_id, channel_id)
         scenario.remove_character(name)
-        return File(scenario.get_image(), filename='play_mat.png')
+        return File(scenario.get_image(), filename='play_mat.png'), scenario.characters
 
     @staticmethod
-    def _move_character(guild_id, channel_id, name, movement):
+    def _move_character(guild_id, channel_id, name, movement) -> Tuple[File, dict]:
         scenario = Scenarios.get_scenario(guild_id, channel_id)
         scenario.move_character(name, movement)
-        return File(scenario.get_image(True), filename='play_mat.png')
+        return File(scenario.get_image(True), filename='play_mat.png'), scenario.characters
 
     @staticmethod
     def _save_character(guild_id, channel_id, name):
@@ -74,7 +76,7 @@ class CharacterCommands(Cog):
             raise CharacterNotFoundInScenarioException
 
     @staticmethod
-    def _load_character(guild_id, channel_id, name):
+    def _load_character(guild_id, channel_id, name) -> Tuple[File, dict]:
         scenario = Scenarios.get_scenario(guild_id, channel_id)
         alias = None
         if '/' in name:
@@ -86,7 +88,7 @@ class CharacterCommands(Cog):
             if alias:
                 char.name = alias
             scenario.add_character(char)
-            return File(scenario.get_image(), filename='play_mat.png')
+            return File(scenario.get_image(), filename='play_mat.png'), scenario.characters
         except KeyError:
             raise CharacterNotFoundInDatabaseException
 
@@ -135,9 +137,9 @@ class CharacterCommands(Cog):
             if len(attachments) > 0:
                 url = attachments[0].url
 
-        image = await self.bot.loop.run_in_executor(None, self._add_character, guild_id, channel_id, name, url,
-                                                    position_x, position_y, size_x, size_y)
-        await ctx.send(file=image)
+        image, chars = await self.bot.loop.run_in_executor(None, self._add_character, guild_id, channel_id, name, url,
+                                                           position_x, position_y, size_x, size_y)
+        await post_scenario(ctx, image, chars)
 
     @command(aliases=['rc', 'removecharacter', 'removechar', 'remove_char', 'Rc'],
              help="""Removes a character from the scenario
@@ -158,8 +160,8 @@ class CharacterCommands(Cog):
         guild_id = str(ctx.guild.id)
         channel_id = str(ctx.channel.id)
         await ctx.send("Processing...")
-        image = await self.bot.loop.run_in_executor(None, self._remove_character, guild_id, channel_id, name)
-        await ctx.send(file=image)
+        image, chars = await self.bot.loop.run_in_executor(None, self._remove_character, guild_id, channel_id, name)
+        await post_scenario(ctx, image, chars)
 
     @command(aliases=['m', 'mc', 'move_char', 'movecharacter', 'move', 'M'],
              help="""Moves a character
@@ -186,10 +188,9 @@ class CharacterCommands(Cog):
 
         guild_id = str(ctx.guild.id)
         channel_id = str(ctx.channel.id)
-        scenario = Scenarios.get_scenario(guild_id, channel_id)
         await ctx.send("Processing...")
-        image = await self.bot.loop.run_in_executor(None, self._move_character, guild_id, channel_id, name, movement)
-        await ctx.send(file=image)
+        image, chars = await self.bot.loop.run_in_executor(None, self._move_character, guild_id, channel_id, name, movement)
+        await post_scenario(ctx, image, chars)
 
     @command(aliases=['sc', 'savecharacter', 'savechar', 'save_char', 'Sc'],
              help="""Saves a character in the permanent database
@@ -211,7 +212,8 @@ class CharacterCommands(Cog):
         channel_id = str(ctx.channel.id)
         await ctx.send("Processing...")
         await self.bot.loop.run_in_executor(None, self._save_character, guild_id, channel_id, name)
-        await ctx.send(f'Character **{name}** saved successfully in the database!\n{dontpad.DONTPAD_BASE_URL}{DTRE_URL}/{guild_id}/{channel_id}/chars')
+        await ctx.send(
+            f'Character **{name}** saved successfully in the database!\n{dontpad.DONTPAD_BASE_URL}{DTRE_URL}/{guild_id}/{channel_id}/chars')
 
     @command(aliases=['lc', 'listcharacters', 'listchars', 'list_chars', 'Lc'],
              help="""List the names of the characters that are saved in the channel's dataase

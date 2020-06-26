@@ -1,3 +1,4 @@
+import math
 import shutil
 from abc import ABC
 from io import BytesIO
@@ -17,6 +18,8 @@ BACKGROUND_GRIDDED_FILENAME = 'background_gridded.png'
 
 MODE_RGBA = 'RGBA'
 
+_LEGEND_PADDING = 15
+
 
 class PlaymatImageProcessor(ImageProcessor, ABC):
 
@@ -32,6 +35,8 @@ class PlaymatImageProcessor(ImageProcessor, ABC):
         self._zoom = zoom
         self._text_color = text_color
         self._movement_color = movement_color
+        self._legend_color = 'gray'
+        self._font = font = ImageFont.truetype('image/files/FreeMonoBold.ttf', int(self._square_size / 2))
 
     @property
     def size(self):
@@ -68,8 +73,6 @@ class PlaymatImageProcessor(ImageProcessor, ABC):
 
         draw = ImageDraw.Draw(img)
 
-        font = ImageFont.truetype('image/files/FreeMonoBold.ttf', int(self._square_size / 2))
-
         for x in range(size_x):
             for y in range(size_y):
                 top_left_corner = (offset_x + (x * self._square_size), offset_y + (y * self._square_size))
@@ -82,7 +85,7 @@ class PlaymatImageProcessor(ImageProcessor, ABC):
                         ),
                         str(x),
                         fill=self._text_color,
-                        font=font
+                        font=self._font
                     )
                 elif x == 0:
                     draw.text(
@@ -92,7 +95,7 @@ class PlaymatImageProcessor(ImageProcessor, ABC):
                         ),
                         str(y),
                         fill=self._text_color,
-                        font=font
+                        font=self._font
                     )
                 draw.rectangle((top_left_corner, bottom_right_corner), outline=(0, 0, 0, 255))
 
@@ -105,8 +108,54 @@ class PlaymatImageProcessor(ImageProcessor, ABC):
         size_y = int((img.size[1] - self._offset_pixels[1]) / self._square_size)
         return size_x, size_y
 
+    def _get_legend(self, characters: Dict[str, Character]):
+        font_size = int(self._square_size / 2)
+        images = []
+        index = 1
+        biggest_width = 0
+        biggest_height = 0
+        for char in characters.values():  # type: Character
+            tk: Image = char.token.get_image()
+            leg_size_x = _LEGEND_PADDING + tk.size[0] + _LEGEND_PADDING + \
+                         (len(char.name) + 5) * int(font_size / 1.5) + _LEGEND_PADDING
+            leg_size_y = _LEGEND_PADDING + tk.size[1] + _LEGEND_PADDING
+            img = Image.new(MODE_RGBA, (leg_size_x, leg_size_y), color=ImageColor.getrgb(self._legend_color))
+            draw = ImageDraw.Draw(img)
+            draw.text(
+                (_LEGEND_PADDING + tk.size[0] + _LEGEND_PADDING, _LEGEND_PADDING + (tk.size[1] / 2) - font_size / 2),
+                f'{index} - {char.name}', fill=self._text_color, font=self._font)
+            img.alpha_composite(tk, (_LEGEND_PADDING, _LEGEND_PADDING))
+            images.append(img)
+            if img.size[0] > biggest_width:
+                biggest_width = img.size[0]
+            if img.size[1] > biggest_height:
+                biggest_height = img.size[1]
+            index += 1
+        map_size = self._get_background().size
+        collumns = math.floor(map_size[0] / biggest_width)
+        rows = math.ceil(len(images) / collumns)
+        legend_image = Image.new(MODE_RGBA, (collumns * biggest_width, rows * biggest_height),
+                                 color=ImageColor.getrgb(self._legend_color))
+        legend_draw = ImageDraw.Draw(legend_image)
+        collumn_counter = 0
+        row_counter = 0
+        for index in range(len(images)):
+            legend_image.paste(images[index], (collumn_counter * biggest_width,
+                                               row_counter * biggest_height))
+            legend_draw.rectangle((collumn_counter * biggest_width, row_counter * biggest_height,
+                                   collumn_counter * biggest_width + biggest_width,
+                                   row_counter * biggest_height + biggest_height), width=5)
+            collumn_counter += 1
+            if collumn_counter >= collumns:
+                collumn_counter = 0
+                row_counter += 1
+                if row_counter >= rows:
+                    row_counter = 0
+        return legend_image
+
     def get_full_map(self, characters: Dict[str, Character], movement: List[Tuple[int, int]] = None, overwrite=False):
         img = self.get_image(overwrite)
+        draw = ImageDraw.Draw(img)
 
         size_x, size_y = self._map_size
         offset_x, offset_y = self._offset_pixels
@@ -118,7 +167,6 @@ class PlaymatImageProcessor(ImageProcessor, ABC):
                 if movement is not None:
                     for mov in movement:
                         if mov == (x, y):
-                            draw = ImageDraw.Draw(img)
                             size = self._square_size / 3
                             draw.ellipse(
                                 (
@@ -127,12 +175,16 @@ class PlaymatImageProcessor(ImageProcessor, ABC):
                                 ),
                                 fill=self._movement_color
                             )
-                for char in characters.values():
+                for index, char in enumerate(characters.values()):
                     if char.token.position == (x, y):
                         img.alpha_composite(
                             char.token.get_image(),
                             (pos_x, pos_y)
                         )
+                        text_x = pos_x - int(self._square_size / 4) - int(self._font.size / 2)
+                        text_y = pos_y - int(self._square_size / 4) - int(self._font.size / 2)
+                        draw.text((text_x, text_y), f'{index}.', fill=self._text_color, font=self._font)
+                        
         image_bytes = BytesIO()
         img.save(image_bytes, quality=85, optimize=True, format='PNG')
         image_bytes.seek(0)
@@ -145,3 +197,31 @@ class PlaymatImageProcessor(ImageProcessor, ABC):
     def set_movement_color(self, color: str):
         imgcolor = ImageColor.getrgb(color)
         self._movement_color = imgcolor
+
+
+if __name__ == '__main__':
+    from src.image.playmat import Playmat
+
+    names = ["Zefodinha", "Cabeça de Boi", "Grognack", "Quertzacoatl"]
+    pos = [(2, 2), (20, 20), (20, 4), (4, 16)]
+    sizes = [(1, 1), (2, 1), (2, 2), (1, 1)]
+    chars = {}
+    for i in range(len(names)):
+        chars[names[i]] = Character(names[i],
+                                    Token(names[i], pos[i], 'https://i.imgur.com/MKrgAEX.jpg', 45, '0000',
+                                          '0000', sizes[i]))
+    playmat = Playmat('0000', '0000', 'https://i.imgur.com/G5kc4QX.jpg', (0, 0), 45)
+    # legend = playmat._get_legend(chars)
+    map_ = playmat.get_full_map(chars)
+    # legend.save('legend.png')
+    with open("map.png", "wb") as outfile:
+        # Copy the BytesIO stream to the output file
+        outfile.write(map_.getbuffer())
+    # map_img = Image.open("map.png")
+    # out = Image.new(MODE_RGBA, (map_img.size[0], legend.size[1] + map_img.size[1]), (128, 128, 128))
+    # out.paste(legend)
+    # out.save('out_legend.png')
+    # out.paste(map_img, box=(0, legend.size[1]))
+    # out.save('out.png')
+
+
