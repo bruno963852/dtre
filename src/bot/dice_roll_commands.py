@@ -32,7 +32,7 @@ class DiceRollCommands(Cog):
             message += f'__Target:__ {target}\n**{"Passed!" if result >= target else "Fail..."}**'
         await ctx.send(message)
 
-    @command(aliases=['rd', 'rolld20','Rd'],
+    @command(aliases=['rd', 'rolld20', 'Rd'],
              help="""Makes a test on d20 system and D&D derivatives's style.
                     Rolls 1d20 + [modifier] and checks against the [target]
                     It also tells if the roll was a critical hit or fumble
