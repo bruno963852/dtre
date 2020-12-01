@@ -121,7 +121,7 @@ async def on_command(ctx: Context):
                            "https://docs.google.com/forms/d/e/1FAIpQLScKtpK07wcYJp3olo9psn_xPs-_OKmSZD1U02MXD2jPco-EMw/viewform?usp=sf_link")
             servlist.append(ctx.guild.id)
             file = open(filepath, 'w')
-            file.write(json.dumps(filepath))
+            file.write(json.dumps(servlist))
             file.close()
 
 
@@ -129,6 +129,6 @@ def run():
     filepath = '../cache/polldb.json'
     if not os.path.exists(filepath):
         file = open(filepath, 'w')
-        file.write('[]')
+        file.write(json.dumps([]))
         file.close()
     bot.run(TOKEN)
