@@ -8,20 +8,12 @@ _ATTR_FRAME_SECONDARY_COLOR = 'frame_secondary_color'
 _ATTR_SIZE_Y = 'size_y'
 _ATTR_SIZE_X = 'size_x'
 
-_DEFAULT_COLOR = 'black'
-_DEFAULT_SEC_COLOR = 'lightgray'
-
 
 class Token(TokenImageProcessor):
-    def __init__(self, name: str, position: Tuple[int, int], image_url: str, square_size: int, server_id: str,
-                 channel_id: str, size: Tuple[int, int], frame_color: str = _DEFAULT_COLOR,
-                 frame_secondary_color: str = _DEFAULT_SEC_COLOR):
-        super().__init__(name, position, image_url, square_size, server_id, channel_id, size, frame_color,
+    def __init__(self, position: Tuple[int, int], image_url: str, square_size: int, server_id: str,
+                 channel_id: str, size: Tuple[int, int], frame_color: str, frame_secondary_color: str):
+        super().__init__(position, image_url, square_size, server_id, channel_id, size, frame_color,
                          frame_secondary_color)
-
-    @property
-    def name(self) -> str:
-        return self._name
 
     @property
     def size(self) -> Tuple[int, int]:
@@ -64,7 +56,6 @@ class Token(TokenImageProcessor):
     @staticmethod
     def from_dict(dict_: dict, name: str, square_size: int, server_id: str, channel_id: str):
         return Token(
-            name=name,
             server_id=server_id,
             channel_id=channel_id,
             square_size=square_size,
@@ -77,6 +68,6 @@ class Token(TokenImageProcessor):
 
 
 if __name__ == '__main__':
-    tk = Token('ze', (1, 1), 'https://image.freepik.com/free-vector/chicken-fighter_1975-119.jpg', 64, '0000', '0000',
+    tk = Token((1, 1), 'https://image.freepik.com/free-vector/chicken-fighter_1975-119.jpg', 64, '0000', '0000',
                (2, 2), 'files/default_token_frame.png')
     tk._get_frame().save('test.png')

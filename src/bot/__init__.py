@@ -2,6 +2,8 @@ import logging
 import os
 import sys
 import traceback
+import json
+from asyncio import Lock
 from concurrent.futures.thread import ThreadPoolExecutor
 from typing import Dict
 
@@ -15,7 +17,8 @@ from src.bot.discord_logging_handler import DiscordLoggingHandler
 from src.bot.misc_commands import MiscCommands
 from src.bot.scenario_commands import ScenarioCommands
 from src.char import Character
-from src.image.exceptions import CharacterNotFoundInScenarioException, InvalidMovementException, FrameWithoutAlphaException
+from src.image.exceptions import CharacterNotFoundInScenarioException, InvalidMovementException, \
+    FrameWithoutAlphaException
 from src.scenario import Scenario
 
 TOKEN = os.environ["DISCORD_TOKEN"]
@@ -28,6 +31,8 @@ COMMAND_PREFIXES = ('?dtre.', '?r.', '?r ', 'Dtre ', 'DTRE ', 'dtre ', 'DTRE ')
 
 bot = commands.Bot(command_prefix=COMMAND_PREFIXES, description=DESCRIPTION)
 bot.loop.set_default_executor(ThreadPoolExecutor(max_workers=5))
+
+filelock = Lock()
 
 
 @bot.event
@@ -102,5 +107,28 @@ async def on_command_error(ctx: Context, error: Exception):
     traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
 
+@bot.event
+async def on_command(ctx: Context):
+    filepath = '../cache/polldb.json'
+    async with filelock:
+        file = open(filepath, 'r')
+        servlist = json.loads(file.read())  # type: list
+        file.close()
+        if ctx.guild.id not in servlist:
+            await ctx.send("Estou precisando de sua participação para decidir o futuro deste bot. por favor responda "
+                           "a essa rápida pesquisa.\n\nI need your help deciding the future of this bot, please answer"
+                           "this quick survey\n\n"
+                           "https://docs.google.com/forms/d/e/1FAIpQLScKtpK07wcYJp3olo9psn_xPs-_OKmSZD1U02MXD2jPco-EMw/viewform?usp=sf_link")
+            servlist.append(ctx.guild.id)
+            file = open(filepath, 'w')
+            file.write(json.dumps(filepath))
+            file.close()
+
+
 def run():
+    filepath = '../cache/polldb.json'
+    if not os.path.exists(filepath):
+        file = open(filepath, 'w')
+        file.write('[]')
+        file.close()
     bot.run(TOKEN)
