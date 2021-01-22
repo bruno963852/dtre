@@ -46,7 +46,9 @@ class CharacterCommands(Cog):
                 scenario.map.square_size,
                 guild_id,
                 channel_id,
-                (size_x, size_y)
+                (size_x, size_y),
+                'black',
+                'black'
             )
         )
         scenario.add_character(char)

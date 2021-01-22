@@ -1,4 +1,7 @@
 from typing import Tuple
+
+from PIL.ImageEnhance import Color
+
 from src.image.play_token_image_processor import TokenImageProcessor, DEFAULT_TOKEN_FRAME_FILE
 
 _ATTR_POSITION = 'position'
@@ -10,9 +13,9 @@ _ATTR_SIZE_X = 'size_x'
 
 
 class Token(TokenImageProcessor):
-    def __init__(self, position: Tuple[int, int], image_url: str, square_size: int, server_id: str,
+    def __init__(self, name, position: Tuple[int, int], image_url: str, square_size: int, server_id: str,
                  channel_id: str, size: Tuple[int, int], frame_color: str, frame_secondary_color: str):
-        super().__init__(position, image_url, square_size, server_id, channel_id, size, frame_color,
+        super().__init__(name, position, image_url, square_size, server_id, channel_id, size, frame_color,
                          frame_secondary_color)
 
     @property

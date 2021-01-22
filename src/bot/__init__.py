@@ -25,7 +25,7 @@ TOKEN = os.environ["DISCORD_TOKEN"]
 
 DESCRIPTION = '''DTRE is a tabletop rpg engine to be used in discord. If you're tired of complicated tools, 
 but want some more functionality and want a simple streamlined roleplaying experience directly on discord, 
-with no external apps, and that can be easily playable on mobile search no further. '''
+with no external apps, and that can be easily playable on mobile search no further.'''
 
 COMMAND_PREFIXES = ('?dtre.', '?r.', '?r ', 'Dtre ', 'DTRE ', 'dtre ', 'DTRE ')
 

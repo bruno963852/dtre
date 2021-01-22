@@ -8,7 +8,7 @@ class DiceRollCommands(Cog):
 
     @command(aliases=['r', 'R'],
              help="""Makes a dice roll indicated by the sent string in dice notation.
-                For more info on dice notatio check:
+                For more info on dice notation check:
                 https://xdice.readthedocs.io/en/latest/dice_notation.html
                 target: (Optional) the target value to be obtained, the engine will tell if
                 the test failed or succeeded
